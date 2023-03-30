@@ -22,17 +22,22 @@ public class Player : MonoBehaviour
     public bool isWalking = false;
     public bool isIdle = false;
     public bool isMoving = false;
+    public bool isAttacking = false;
 
     //RididBody2D, SpriteRenderer, Anim Codes
     public Rigidbody2D rb;
     public SpriteRenderer sr;
     public Animator anim;
     public Vector2 inputVec;
+    public Hand[] hands;
+
+    private bool attackInput = false;
 
     private void Awake() {
         rb = GetComponent<Rigidbody2D>();
         sr = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
+        hands = GetComponentsInChildren<Hand>(true);
     }
 
 
@@ -45,6 +50,9 @@ public class Player : MonoBehaviour
     {
         inputVec.x = Input.GetAxisRaw("Horizontal");
         inputVec.y = Input.GetAxisRaw("Vertical");
+        if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0)) {
+            attackInput = true; // Set the attack flag
+        }        
     }
 
     void FixedUpdate() 
@@ -65,16 +73,40 @@ public class Player : MonoBehaviour
             isIdle = true;
         }
         rb.MovePosition(rb.position + nextVec);
+
+
+        // Normal Attack-Action
+        // Space or Mouse Left Button 1Click
+        
+
+        if (attackInput && !isAttacking) {
+            isAttacking = true;
+            StartCoroutine(NormalAttack());
+            Debug.Log("Attack?");
+        }
     }
 
     //프레임이 종료 되기 전 실행되는 함수
     void LateUpdate() 
     {
-        //anim.SetFloat("Speed", inputVec.magnitude); //inputVec의 크기만 전
-
-
         if (inputVec.x != 0) {
             sr.flipX = inputVec.x < 0; //좌측이면, true flipX가 켜진거임 그리고 우측이면 false
         }
-    }    
+    }
+
+    //Attack IEnumerator
+    // IEnumerator NormalAttack() {
+    //     yield return new WaitForSeconds(0.5f);
+    // }
+    
+    IEnumerator NormalAttack() {
+        anim.SetBool("NormalAttack", true);
+        hands[0].NormalAttackOn();
+        yield return new WaitForSeconds(0.5f);
+        anim.SetBool("NormalAttack", false);
+        hands[0].NormalAttackOff();
+        isAttacking = false;
+        attackInput = false;
+    }
+
 }
