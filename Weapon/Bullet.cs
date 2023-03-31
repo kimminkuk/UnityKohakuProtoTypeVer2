@@ -10,7 +10,7 @@ public class Bullet : MonoBehaviour
 
     Rigidbody2D rigid;
 
-    void Start()
+    private void Awake()
     {
         rigid = GetComponent<Rigidbody2D>();    
     }
@@ -18,7 +18,7 @@ public class Bullet : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        // 
     }
 
     //Init, damage, per, Vector3를 설정하는 함수
@@ -45,7 +45,8 @@ public class Bullet : MonoBehaviour
         //     Destroy(gameObject);
         // }
 
-        if (!collision.CompareTag("Enemy") || per == -1)
+        //if (!collision.CompareTag("Enemy") || per == -1)
+        if (per == -1)
             return;
 
         per--;
@@ -59,7 +60,7 @@ public class Bullet : MonoBehaviour
 
     void Fire()
     {
-        //플레이가 바라보는 방향으로 발사
+        //플레이가 바라보는 방향으로 발사
         Vector3 dir = GameManager.instance.player.transform.position - transform.position;
         
         dir = dir.normalized;
