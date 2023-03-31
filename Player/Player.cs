@@ -133,7 +133,7 @@ public class Player : MonoBehaviour
 
             // Set the missile's initial direction and velocity
             // Rigidbody2D missileRb = bullet.GetComponent<Rigidbody2D>();
-            // missileRb.velocity = dir * missileSpeed;
+            // missileRb.velocity = dir * missileSpeed;dd
         }
     }
     
