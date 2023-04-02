@@ -9,14 +9,18 @@
   - Player
     - 움직임 (Flip x 만 표현)
     - 공격
-      - Range 
-      - Melee 
+      - Range ( 10%, 8방향 날아가는것만 확인 )
+      - Melee (  0% )
     - 스킬
     - 회피
     - 방어
   - Class
     - Magic
+      - 여러 상태 좌표 및 액션 ( 10%, 공격 모션, x,y방향 움직임 )
     - Sword
+      - 여러 상태 좌표 및 액션 ( 5%, x,y방향 움직임 )
+    - Hammer
+      - 여러 상태 좌표 및 액션 ( 5%, x,y방향 움직임 )
     - Axe
     - SwordGuard
     - DarkMagic
@@ -27,6 +31,7 @@
     - Castle Wall 생성
   - Item
     - 직업
+      - 바닥에 뿌려두고 줍고 변경되는거 추가 ( 0% )
     - 무기
     - 방어
     - 스킬
