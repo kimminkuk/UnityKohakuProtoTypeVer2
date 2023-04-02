@@ -9,9 +9,17 @@
   - Player
     - 움직임 (Flip x 만 표현)
     - 공격
+      - Range 
+      - Melee 
     - 스킬
     - 회피
     - 방어
+  - Class
+    - Magic
+    - Sword
+    - Axe
+    - SwordGuard
+    - DarkMagic
   - Enemy
     - Player와 동일하지만, 서로 적대시 한다.
   - TileMap
