@@ -44,18 +44,23 @@ public class Bullet : MonoBehaviour
         //     // 자신의 Bullet 오브젝트를 파괴한다.
         //     Destroy(gameObject);
         // }
-
         //if (!collision.CompareTag("Enemy") || per == -1)
-        if (per == -1)
-            return;
+        // if (per == -1)
+        //     return;
+        // per--;
 
-        per--;
-
-        if (per <= -1)
+        // Layer is Greater than 9 (9 index is Enemy~)
+        if (collision.gameObject.layer >= 9)
         {
+            Debug.Log("Bullet OnTriggerEnter2D : " + collision.gameObject.layer);
+            Debug.Log("Bullet OnTriggerEnter2D : " + collision.gameObject.name);
+            Debug.Log("Bullet OnTriggerEnter2D : " + collision.gameObject.tag);
             rigid.velocity = Vector2.zero;
             gameObject.SetActive(false);
-        }        
+        }
+
+        // anyWhere.. it's SetActive false
+        // if tag is Not Player, then
     }
 
     void Fire()
