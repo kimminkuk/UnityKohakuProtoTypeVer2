@@ -30,7 +30,6 @@ public class MoveManager : MonoBehaviour
     public Vector2 inputVec;
     public Hand[] hands;
 
-    private bool attackInput = false;
 
     //Player 2D 8-direction
     // Enum for 8 possible directions

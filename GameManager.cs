@@ -13,6 +13,7 @@ public class GameManager : MonoBehaviour
     public int gameMode = 0; // 0 : Single, 1 : Multi
     public int gameLevel = 0; // 0 : Easy, 1 : Normal, 2 : Hard
 
+
     [Header("# Player Info")]
     public int health;
     public int mana;
@@ -25,10 +26,13 @@ public class GameManager : MonoBehaviour
     public PoolManager pool;
     public PoolCharcterManager poolCharcter;
     public Player player;
+    public ItemManager itemPool;
 
     private float makeIntervalTime = 1f;
     private float makeTimer = 0f;
 
+    private float makeIntervalItemTime = 3f;
+    private float makeItemTimer = 0f;
 
     private void Awake() 
     {
@@ -52,6 +56,16 @@ public class GameManager : MonoBehaviour
         {
             makeTimer = makeIntervalTime;
             GameObject obj = poolCharcter.GetObject(0);
+            obj.transform.position = new Vector3(Random.Range(-10f, 10f), Random.Range(-10f, 10f), 0f);
+        }
+
+        // 1. 10 Sec Inverval
+        // 2. Get poolCharcter.GetObject(0)
+        makeItemTimer -= Time.deltaTime;
+        if (makeItemTimer <= 0f)
+        {
+            makeItemTimer = makeIntervalItemTime;
+            GameObject obj = itemPool.GetItemObject(0);
             obj.transform.position = new Vector3(Random.Range(-10f, 10f), Random.Range(-10f, 10f), 0f);
         }
     }

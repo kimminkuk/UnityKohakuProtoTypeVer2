@@ -2,34 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class Player : MoveManager
 {
-    // Start is called before the first frame update
-    // Player Movement
-    public float speed = 5f;
-    public float jumpForce = 5f;
-    public float gravity = 9.81f;
-    public float jumpHeight = 2f;
-    public float jumpTime = 0.5f;
-    public float jumpVelocity = 0f;
-    public float jumpTimeCounter = 0f;
-    public bool isGrounded = false;
-    public bool isJumping = false;
-    public bool isFalling = false;
-    public bool isCrouching = false;
-    public bool isRunning = false;
-    public bool isSprinting = false;
-    public bool isWalking = false;
-    public bool isIdle = false;
-    public bool isMoving = false;
-    public bool isAttacking = false;
-
     //RididBody2D, SpriteRenderer, Anim Codes
-    public Rigidbody2D rb;
-    public SpriteRenderer sr;
-    public Animator anim;
-    public Vector2 inputVec;
-    public Hand[] hands;
+    public Vector2 playerInputVec;
 
     private bool attackInput = false;
 
@@ -41,18 +17,13 @@ public class Player : MonoBehaviour
 
     //Player 2D 8-direction
     // Enum for 8 possible directions
-    private int lastDirection = 0;
-    public enum Direction2D {
-        Right,
-        UpRight,
-        Up,
-        UpLeft,
-        Left,
-        DownLeft,
-        Down,
-        DownRight
-    }
+    private int PlayerLastDirection = 0;
 
+    private bool canPickup = false;
+    private GameObject activeItem;
+    private bool isPickingUp = false;
+    private float pickupTime = 1.5f; // Adjust this to change the pickup time
+    private float pickupTimer = 0f;
 
     private void Awake() {
         rb = GetComponent<Rigidbody2D>();
@@ -64,60 +35,64 @@ public class Player : MonoBehaviour
         hands[0].weaponType = WeaponManager.WeaponType.Staff;
     }
 
-
     void Start()
     {
         //if Player's Sprite FlipX is true, then
-        // lastDirection is Left  (2)
-        //else 
-        // lastDirection is Right (6)
         if (sr.flipX) {
-            lastDirection = 2;
+            PlayerLastDirection = 2;
         } else {
-            lastDirection = 6;
+            PlayerLastDirection = 6;
         }
     }
     // Update is called once per frame
     void Update()
     {
-        inputVec.x = Input.GetAxisRaw("Horizontal");
-        inputVec.y = Input.GetAxisRaw("Vertical");
+        playerInputVec.x = Input.GetAxisRaw("Horizontal");
+        playerInputVec.y = Input.GetAxisRaw("Vertical");
         if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0)) {
             attackInput = true; // Set the attack flag
         }
-
-        // if inputVec is not zero, then
-        // Get2D8DirectionToInt(inputVec) is lastDirection
-        if (inputVec != Vector2.zero) {
-            lastDirection = Get2D8DirectionToInt(inputVec);
+        if (playerInputVec != Vector2.zero) {
+            PlayerLastDirection = Get2D8DirectionToInt(playerInputVec);
         }
-                
-        // Vector3 inputVec3 = new Vector3(inputVec.x, inputVec.y, 0).normalized;
-        // if (inputVec3 != Vector3.zero) {
-        //     lastDirection = Get2D8DirectionToInt(inputVec);
-        // }
-        //inputVec를 사용해서, 8방향의 값을 저장
-        //inputVec = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-        //inputVec.Normalize(); //벡터의 크기를 1로 만들어줌
 
+        //Input.GetKeyDown E
+        if (canPickup && Input.GetKeyDown(KeyCode.E))
+        {
+            isPickingUp = true;
+        }
+        if (isPickingUp) {
+            pickupTimer += Time.deltaTime;
+            if (pickupTimer >= pickupTime) {
+                weaponType = activeItem.GetComponent<ItemDropClass>().PickupItemDropClassVer2();            
+                if (activeItem != null) {
+                    activeItem.SetActive(false);
+                }
+                activeItem = null;
+                Debug.Log("Item picked up and added to inventory");
+                Debug.Log("Player weaponType: " + weaponType);                
+                isPickingUp = false;
+                pickupTimer = 0f;
+            }
+        } else {
+            pickupTimer = 0f;
+        }
+        if (Input.GetKeyUp(KeyCode.E))
+        {
+            isPickingUp = false;
+        }        
     }
 
     void FixedUpdate() 
     {
-        //1. 힘을 준다
-        //rb.AddForce(inputVec * 10f, ForceMode2D.Impulse);
-
-        //2. 속도 제어
-        //rb.velocity = Vector2.ClampMagnitude(rb.velocity, 5f);
-
-        //3. 위치 이동
-        Vector2 nextVec = inputVec.normalized * speed * Time.fixedDeltaTime;
+        Vector2 nextVec = playerInputVec.normalized * speed * Time.fixedDeltaTime;
         if (nextVec != Vector2.zero) {
-            isMoving = true;
-            isIdle = false;
+            base.isMoving = true;
+            base.isIdle = false;
         } else {
-            isMoving = false;
-            isIdle = true;
+            
+            base.isMoving = false;
+            base.isIdle = true;
         }
         rb.MovePosition(rb.position + nextVec);
 
@@ -125,11 +100,10 @@ public class Player : MonoBehaviour
         // Normal Attack-Action
         // Space or Mouse Left Button 1Click
         if (attackInput && !isAttacking) {
-            isAttacking = true;
+            base.isAttacking = true;
             hands[0].NormalAttackOn();
             StartCoroutine(NormalAttackCasting());
-            //LaunchMissileVer2();
-            LaunchMissileVer3(lastDirection);
+            LaunchMissileVer3(PlayerLastDirection);
             anim.SetBool("NormalAttack", true);
             StartCoroutine(NormalAttack());     
             Debug.Log("Attack?");
@@ -139,8 +113,8 @@ public class Player : MonoBehaviour
     //프레임이 종료 되기 전 실행되는 함수
     void LateUpdate() 
     {
-        if (inputVec.x != 0) {
-            sr.flipX = inputVec.x < 0; //좌측이면, true flipX가 켜진거임 그리고 우측이면 false
+        if (playerInputVec.x != 0) {
+            sr.flipX = playerInputVec.x < 0; //좌측이면, true flipX가 켜진거임 그리고 우측이면 false
         }
     }
 
@@ -152,44 +126,7 @@ public class Player : MonoBehaviour
         hands[0].NormalAttackOff();
         isAttacking = false;
         attackInput = false;
-        
     }
-    void LaunchMissile()
-    {
-        if (!missileLaunched) {
-            // Create a new instance of the missilePrefab
-            Transform bullet = GameManager.instance.pool.GetObject(0).transform;
-            
-            // Get the direction vector for the missile based on the player's transform
-            Vector3 missileDirection = missileSpawnPoint.transform.position;
-            Vector3 dir = missileDirection - transform.position;
-            dir = dir.normalized;
-            bullet.position = transform.position;
-            bullet.rotation = Quaternion.FromToRotation(Vector3.up, dir);
-            bullet.GetComponent<Bullet>().Init(10, 1, dir); // -1 is Infinity Per.
-
-            // Set the missile's initial direction and velocity
-            // Rigidbody2D missileRb = bullet.GetComponent<Rigidbody2D>();
-            // missileRb.velocity = dir * missileSpeed;dd
-        }
-    }
-    
-    //missile을 플레이어가 이동하는 방향으로 날리기
-    void LaunchMissileVer2()
-    {
-        if (!missileLaunched) {
-            Transform bullet = GameManager.instance.pool.GetObject(0).transform;
-            Vector3 missileDirection = transform.position;
-            Vector3 inputVec3 = new Vector3(inputVec.x, inputVec.y, 0);
-            inputVec3.Normalize();
-            Vector3 dir = missileDirection - inputVec3;
-            dir = dir.normalized;
-            bullet.position = transform.position;
-            bullet.rotation = Quaternion.FromToRotation(Vector3.up, dir);
-            bullet.GetComponent<Bullet>().Init(10, 1, dir); // -1 is Infinity Per.
-        }
-    }
-
     //missile을 플레이어가 이동하는 방향으로 날리기
     //1. 플레이어가 이동하는 방향을 구한다
     //2. 이동하는 값은 가속도가 아니라, 방향 자체를 알려준다.
@@ -197,36 +134,7 @@ public class Player : MonoBehaviour
     void LaunchMissileVer3(int playerDirection)
     {
         if (!missileLaunched) {
-
-            //Create New Instance of Missile Prefab
             Transform bullet = GameManager.instance.pool.GetObject(0).transform;
-
-            //Get the direction Vector for the Missile based on the Player's Transform
-            //Vector3 missileDirection = transform.position;
-
-            //Get the inputVec normalized based on the Player's inputVec
-            // Vector3 inputVec3 = new Vector3(inputVec.x, inputVec.y, 0).normalized;
-            // if (inputVec3 != Vector3.zero) {
-            //     lastDirection = Get2D8DirectionToInt(inputVec);
-            // }
-            Debug.Log("playerDirection : " + playerDirection );
-            //lastDirection = Get2D8DirectionToInt(inputVec);
-            //Debug.Log("sectionIndex : " + sectionIndex + " inputVec3: " + inputVec3);
-            // calculate the direction based on the section index
-            
-            // 5 -> down-right
-            // 6 -> right
-
-
-            // 0 -> up
-            // 1 -> up-left
-            // 2 -> left
-            // 3 -> down-left
-            // 4 -> down
-            // 5 -> down-right
-            // 6 -> right
-            // 7 -> up-right            
-
             Vector3 dir = Vector3.zero;
             switch (playerDirection) {
                 case 0:
@@ -296,5 +204,21 @@ public class Player : MonoBehaviour
         return index;
     }
     
-
+    private void OnTriggerEnter2D(Collider2D collision) {
+        if (collision.CompareTag("Item")) {
+            canPickup = true;
+            activeItem = collision.gameObject;
+            Debug.Log("OnTriggerEnter2D Item");
+        }
+    }
+    private void OnTriggerExit2D(Collider2D collision) {
+        if (collision.CompareTag("Item")) {
+            Debug.Log("OnTriggerExit2D Item");
+            canPickup = false;
+        }
+    }
+    private void PickUpItem()
+    {
+        Debug.Log("How to Destroy?");
+    }    
 }
