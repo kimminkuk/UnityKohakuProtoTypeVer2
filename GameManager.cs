@@ -13,50 +13,73 @@ public class GameManager : MonoBehaviour
     public int gameMode = 0; // 0 : Single, 1 : Multi
     public int gameLevel = 0; // 0 : Easy, 1 : Normal, 2 : Hard
 
-
-    [Header("# Player Info")]
-    public int health;
-    public int mana;
-    public int maxHealth = 100; // 직업마다 달라질 예정
-    public int maxMana = 100; // 직업마다 달라질 예정
-    public int level;
-    public int kill;
+    [Header("# Game Statue")]
+    public int gameStage = 0;
 
     [Header("# GameObject")]
     public PoolManager pool;
     public PoolCharcterManager poolCharcter;
+    public PoolEnemyManager poolEnemy;
     public Player player;
     public ItemManager itemPool;
 
-    private float makeIntervalTime = 1f;
+    public float makeIntervalEnemyTime = 0.5f;
+    private float makeEnemyTimer = 0f;
+
+    public float makeIntervalTime = 0.1f;
     private float makeTimer = 0f;
 
     private float makeIntervalItemTime = 3f;
     private float makeItemTimer = 0f;
 
+    // Respawn Pos List (GameObject, transform.position)
+    public List<GameObject> respawnPosObjectList = new List<GameObject>();
+    public List<GameObject> floortPosObjectList = new List<GameObject>();
+
+    /*
+    *    Control
+    */
+    const bool NO_MAKE_CHARACTERS = false;
+
     private void Awake() 
     {
         instance = this;
+        
     }
 
     void Start()
     {
-        health = maxHealth;
-        mana = maxMana;
         
     }
 
     // Update is called once per frame
     void Update()
     {
+
+        makeEnemyTimer -= Time.deltaTime;
+        if (makeEnemyTimer <= 0f) {
+            makeEnemyTimer = makeIntervalEnemyTime;
+            GameObject obj = poolEnemy.GetEnemyObject(gameStage);
+            int getRespawnPosIndex = Random.Range(0, respawnPosObjectList.Count);
+            obj.transform.position = respawnPosObjectList[getRespawnPosIndex].transform.position;
+        }
+
         // 1. 10 Sec Inverval
         // 2. Get poolCharcter.GetObject(0)
+#if NO_MAKE_CHARACTERS         
         makeTimer -= Time.deltaTime;
         if (makeTimer <= 0f)
         {
             makeTimer = makeIntervalTime;
-            GameObject obj = poolCharcter.GetObject(0);
-            obj.transform.position = new Vector3(Random.Range(-10f, 10f), Random.Range(-10f, 10f), 0f);
+            //Get 0,1 Random Code
+            int getClassChangeIndex = Random.Range(0, 2);
+            GameObject obj = poolCharcter.GetObject(getClassChangeIndex);
+            //obj.transform.position = new Vector3(Random.Range(-10f, 10f), Random.Range(-10f, 10f), 0f);
+            //obj.transform.position = new Vector3(0f, 15f, 0f);
+
+            //obj = respawnPosList 0 index setting
+            int getRespawnPosIndex = Random.Range(0, respawnPosObjectList.Count);
+            obj.transform.position = respawnPosObjectList[getRespawnPosIndex].transform.position;
         }
 
         // 1. 10 Sec Inverval
@@ -65,8 +88,30 @@ public class GameManager : MonoBehaviour
         if (makeItemTimer <= 0f)
         {
             makeItemTimer = makeIntervalItemTime;
-            GameObject obj = itemPool.GetItemObject(0);
-            obj.transform.position = new Vector3(Random.Range(-10f, 10f), Random.Range(-10f, 10f), 0f);
+            //Get 0,1 Random Code
+            int getClassItemDropIndex = Random.Range(0, 2);
+            //GameObject obj = itemPool.GetItemObject(getClassItemDropIndex);
+            
+            //obj.transform.position = new Vector3(Random.Range(-10f, 10f), Random.Range(-10f, 10f), 0f);
+            // obj를 (0, 15, 0) 위치로 이동
+            //obj.transform.position = new Vector3(0f, 15f, 0f);
         }
+#endif        
+
+        //UI에서 버튼 클릭 시, Magician 케릭터를 FloorPos-1 위치에 생성
+        //만약에 케릭터가 3개 이상이면, FloorPos-2에 생성
+        //FloorPos-2에 케릭터가 3개 이상이면, FloorPos-3에 생성
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            //Get 0,1 Random Code
+            int getClassChangeIndex = Random.Range(0, 2);
+            GameObject obj = poolCharcter.GetObject(getClassChangeIndex);
+            //obj.transform.position = new Vector3(Random.Range(-10f, 10f), Random.Range(-10f, 10f), 0f);
+            //obj.transform.position = new Vector3(0f, 15f, 0f);
+
+            //obj = respawnPosList 0 index setting
+            int getRespawnPosIndex = Random.Range(0, floortPosObjectList.Count);
+            obj.transform.position = floortPosObjectList[getRespawnPosIndex].transform.position;
+        }  
     }
 }

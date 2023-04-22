@@ -11,9 +11,6 @@ public class PoolCharcterManager : MonoBehaviour
     List<GameObject>[] pools;
 
     // Random Position Setting 3DVector, Z is 0
-    
-
-    
 
     private void Awake() {
         //3) Make Pool

@@ -13,7 +13,7 @@ public class ItemDropClass : MonoBehaviour
     private void Awake() {
 
         //Sprite Renderer랑 일치하게 작성합니다.
-        weaponType = (WeaponManager.WeaponType)Random.Range(0, 3);
+        //weaponType = (WeaponManager.WeaponType)Random.Range(0, 3);
         switch(weaponType) {
             case WeaponManager.WeaponType.Sword:
                 spriteName = "Normal_Sword";
