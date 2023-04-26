@@ -30,9 +30,6 @@ public class Player : MoveManager
     private Animator weaponAnimation;
     public GameObject playerObject;
 
-    //myFailList
-    private bool prefab_change_fail_case = false;
-
     private void Awake() {
         // rb = GetComponent<Rigidbody2D>();
         // sr = GetComponent<SpriteRenderer>();
@@ -108,7 +105,7 @@ public class Player : MoveManager
                 base.ChangeClassObject(weaponType);
                 //base.ChangeClassType(weaponType);
 
-#if prefab_change_fail_case
+#if false
                 // Change to the Class
                 string prefabClassName = GetPrefabClassName(weaponType);
                 Debug.Log("prefabClassName: " + prefabClassName);

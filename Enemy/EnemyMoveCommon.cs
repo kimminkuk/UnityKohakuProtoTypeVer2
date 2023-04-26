@@ -28,6 +28,8 @@ public class EnemyMoveCommon : MonoBehaviour
     public Animator anim;
     public Vector2 inputVec;
 
+    public bool isAttacked = false;
+
     //Enemy Hand로 변경 예정..
     //public Hand[] hands;
 
@@ -64,14 +66,14 @@ public class EnemyMoveCommon : MonoBehaviour
     /*
     *    Enemy Sprite, Animation
     */
-    private string folderPath = "Sprites/Enemy";
-    private string folderAnimPath = "Animation/Enemy";
+    // private string folderPath = "Sprites/Enemy";
+    // private string folderAnimPath = "Animation/Enemy";
 
     /*
         Common Take Damage Code
     */
-    public float flashDuration = 0.1f;
-    public Color flashColor = new Color(1f, 0f, 0f, 0.5f);
+    public float flashDuration = 0.5f;
+    public Color flashColor = new Color(1f, 0.7f, 0.7f, 0.7f);
 
     private void Awake() {
         health = maxHealth;
@@ -82,7 +84,8 @@ public class EnemyMoveCommon : MonoBehaviour
     }
 
     void Start()
-    {     
+    {   
+        sr.color = new Color (1f, 1f, 1f, 1f);
         if (sr.flipX) {
             lastDirection = 6;
         } else {
@@ -93,11 +96,13 @@ public class EnemyMoveCommon : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
         if (!isGrounded) {
             return;
         }
         
-        if (canMove)
+        //if (canMove)
+        if (canMove && !isAttacked)
         {
             isMoving = true;
             Vector2 moveDirection = new Vector2(isMoveLeft, 0).normalized;
@@ -111,7 +116,11 @@ public class EnemyMoveCommon : MonoBehaviour
         {
             isMoving = false;
             anim.SetBool("isWalking", false);
-        }        
+        }
+        if (isAttacked) {
+            rb.MovePosition(rb.position);
+            rb.velocity = Vector2.zero;
+        }
     }
     // Update is called once per frame
     private void FixedUpdate() {
@@ -125,6 +134,7 @@ public class EnemyMoveCommon : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other) {
         if (other.gameObject.tag == "Ground") {
+            Debug.Log("...Call?");
             canMove = true;
             isMoveLeft *= -1;
             isGrounded = true;  
@@ -153,6 +163,97 @@ public class EnemyMoveCommon : MonoBehaviour
                 isMoving = false;
             }
         }
-    }    
+    }
 
+    //take Damage
+    public void TakeDamage(int damage) {
+        Debug.Log("Enemy Take Damage");
+        health -= damage;
+        //canMove = false;
+        isAttacked = true;
+        rb.velocity = Vector2.zero; // Stop the enemy from falling             
+        if (gameObject.activeInHierarchy) {
+            StartCoroutine(Flash());
+        }
+        //canMove = true;
+        isAttacked = false;
+        if (health <= 0) {
+            Die();
+        }
+    }
+
+    private IEnumerator Flash() {
+        Color originalColor = new Color(1f, 1f, 1f, 1f);
+        float elapsed = 0f;
+        bool isFlashing = true;   
+        while (elapsed < flashDuration) {
+            if (isFlashing) {
+                sr.color = flashColor;
+            } else {
+                sr.color = originalColor;
+            }
+            isFlashing = !isFlashing;
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        sr.color = originalColor;
+    }
+
+    private IEnumerator FlashAndKnockback(Vector2 knockbackDirection, float knockbackTime) {
+        Color originalColor = new Color(1f, 1f, 1f, 1f);
+        float elapsed = 0f;
+        bool isFlashing = true;   
+        while (elapsed < knockbackTime) {
+            rb.MovePosition(transform.position);
+            if (isFlashing) {
+                sr.color = flashColor;
+            } else {
+                sr.color = originalColor;
+            }
+            isFlashing = !isFlashing;
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        sr.color = originalColor;
+    }
+
+    public void TakeDamage(int damage, Vector2 knockbackDirection, float knockbackTime)
+    {
+        Debug.Log("Enemy Take Damage");
+        health -= damage;
+
+        // Apply knockback force
+        //rb.velocity = knockbackDirection.normalized * knockbackForce * 100000;
+        knockbackDirection.y = 0f;
+        if (gameObject.activeInHierarchy) {
+            StartCoroutine(FlashAndKnockback(knockbackDirection, knockbackTime));
+        }
+        if (health <= 0)
+        {
+            Die();
+        }
+    }
+
+    void Die() {
+        //SomeTimes, Enemy Color is Flash(Red)
+        sr.color = new Color(1f, 1f, 1f, 1f);
+        setDefault();
+        gameObject.SetActive(false);
+    }
+
+    void setDefault() {
+        isGrounded = false;
+        isJumping = false;
+        isFalling = false;
+        isCrouching = false;
+        isRunning = false;
+        isSprinting = false;
+        isWalking = false;
+        isIdle = false;
+        isMoving = false;
+        isAttacking = false;
+        isMoveLeft = 1;
+        ifFirstGround = false;
+        canMove = false;
+    }
 }

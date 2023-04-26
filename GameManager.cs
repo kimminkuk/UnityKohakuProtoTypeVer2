@@ -35,11 +35,7 @@ public class GameManager : MonoBehaviour
     // Respawn Pos List (GameObject, transform.position)
     public List<GameObject> respawnPosObjectList = new List<GameObject>();
     public List<GameObject> floortPosObjectList = new List<GameObject>();
-
-    /*
-    *    Control
-    */
-    const bool NO_MAKE_CHARACTERS = false;
+    
 
     private void Awake() 
     {
@@ -66,7 +62,7 @@ public class GameManager : MonoBehaviour
 
         // 1. 10 Sec Inverval
         // 2. Get poolCharcter.GetObject(0)
-#if NO_MAKE_CHARACTERS         
+#if false         
         makeTimer -= Time.deltaTime;
         if (makeTimer <= 0f)
         {
@@ -106,12 +102,7 @@ public class GameManager : MonoBehaviour
             //Get 0,1 Random Code
             int getClassChangeIndex = Random.Range(0, 2);
             GameObject obj = poolCharcter.GetObject(getClassChangeIndex);
-            //obj.transform.position = new Vector3(Random.Range(-10f, 10f), Random.Range(-10f, 10f), 0f);
-            //obj.transform.position = new Vector3(0f, 15f, 0f);
-
-            //obj = respawnPosList 0 index setting
-            int getRespawnPosIndex = Random.Range(0, floortPosObjectList.Count);
-            obj.transform.position = floortPosObjectList[getRespawnPosIndex].transform.position;
+            obj.transform.position = floortPosObjectList[1].transform.position;
         }  
     }
 }

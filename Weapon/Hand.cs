@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class Hand : MonoBehaviour
 {
+    public float knockbackTime;
+    public int weaponDamage;
+    public bool isAttacking;
     public bool isLeft;
     public SpriteRenderer spriter;
     public Animator weaponAnim;
@@ -85,6 +88,13 @@ public class Hand : MonoBehaviour
         //weaponAnim.SetBool("FlipX", flip);
         weaponAnim.SetTrigger("N_Attack");
     }
+
+    public void meleeNormalAttackTriggerOn(float speed)
+    {
+        weaponAnim.speed = speed;
+        //weaponAnim.SetBool("FlipX", flip);
+        weaponAnim.SetTrigger("N_Attack");
+    }    
 
     private void LateUpdate()
     {
@@ -268,5 +278,20 @@ public class Hand : MonoBehaviour
         spriter.sprite = Resources.Load<Sprite>(folderPath + "/" + spriteName);
         Debug.Log("spriteName: " + spriteName + "spriter.sprite: " + spriter.sprite);
         weaponAnim.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(folderAnimPath + "/" + weaponName);
+    }
+
+    private void OnTriggerEnter2D(Collider2D other) {
+        if (isAttacking) {
+            Debug.Log("Hands OnTriggerEnter2D");
+            if (other.CompareTag("Enemy")) {
+                //other.GetComponent<EnemyMoveCommon>().TakeDamage(weaponDamage);
+                
+                other.GetComponent<EnemyMoveCommon>().TakeDamage(weaponDamage, transform.position - other.transform.position , knockbackTime);
+                
+            }
+        }
+        // if (other.CompareTag("Enemy")) {
+        //     other.GetComponent<EnemyMoveCommon>().TakeDamage(weaponDamage);
+        // }        
     }
 }

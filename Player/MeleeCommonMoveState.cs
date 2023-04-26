@@ -2,9 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MoveManager : MonoBehaviour
+public class MeleeCommonMoveState : MonoBehaviour
 {
     [Header("# Common Move State")]
+    public float attackSpeed;
     public float moveSpeed = 5f;
     public float gravitySpeed;
     public float speed ;
@@ -95,17 +96,21 @@ public class MoveManager : MonoBehaviour
 
     private Collider2D moveCollider;
 
-    /*
+    /*x
     *    Enemy Target, Attack Variables
     */
+    public List<Transform> waitPos = new List<Transform>();
     public float enemySearchRange = 5f;
+    private float enemySearchTime = 0.3f;
+    private float searchWaitTime = 0f;
     public float attackRange = 0.5f;
     public string enemyTag = "Enemy";
+    public string enemyLayer = "Enemy";
     public float attackDelay = 1f;
-    public float attackDamage = 10f;
 
     private Transform target;
     private float lastAttackTime;
+    private bool walkAndEnemySearch = false;
 
     private void Awake() {
         health = maxHealth;
@@ -129,42 +134,62 @@ public class MoveManager : MonoBehaviour
 
     void Update()
     {   
-
-        // 가장 가까운 거리의 Enemy Tag를 추적합니다.
-        // attackRange 안에 들어 오면, 공격합니다.
-        // 공격 후, attackDelay 만큼의 시간이 지나면 다시 공격합니다.
-        // 가장 가까운 적을 추적합니다.
         Transform nearestEnemy = null;
-        float distance = 0;
-        if (Time.time > lastAttackTime + attackDelay)
-        {
-            // find the nearest enemy within range
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, enemySearchRange);
-            float minDistance = float.MaxValue;
-            
-
-            foreach (Collider2D collider in colliders)
-            {
-                if (collider.CompareTag(enemyTag))
-                {
-                    distance = Mathf.Abs(transform.position.x - collider.transform.position.x);
-                    if (distance < minDistance)
-                    {
-                        minDistance = distance;
-                        nearestEnemy = collider.transform;
-                    }
+        nearestEnemy = findNearestEnemy(isAttacking);
+        if (!hands[0].isAttacking) {
+            if (nearestEnemy) {
+                if (Vector2.Distance(transform.position, nearestEnemy.position) <= attackRange) {
+                    walkAndEnemySearch = true;
+                    searchWaitTime = 0f;
+                    Attack(nearestEnemy, attackSpeed);
+                    StartCoroutine(AttackOff());
+                } else {
+                    if (hands[0].isAttacking) return;
+                    Vector2 direction = (nearestEnemy.position - transform.position);
+                    direction.y = 0f;           
+                    Vector2 newPosition = new Vector2(nearestEnemy.position.x, transform.position.y);
+                    rb.MovePosition(Vector2.Lerp(transform.position, newPosition, Time.deltaTime * moveSpeed));                
+                }
+            } else {
+                // 1. enemySearchTime 시간이 지나면, waitPos[0] 위치로 서서히 이동한다.
+                searchWaitTime += Time.deltaTime;
+                if (searchWaitTime > enemySearchTime) {
+                    //rb.MovePostion을 normalize해서 이동하면, 이동속도가 일정하게 유지된다.
+                    Vector2 direction = (waitPos[0].position - transform.position).normalized;
+                    direction.y = 0f;   
+                    Vector2 newPosition = new Vector2(transform.position.x + direction.x * moveSpeed * Time.deltaTime, transform.position.y);
+                    rb.MovePosition(newPosition);
+                    walkAndEnemySearch = true;
                 }
             }
+        } 
+    }
 
-            if (nearestEnemy != null)
+    private Transform findNearestEnemy(bool isAttacking) {
+        if (isAttacking) return null;
+        enemySearchRange = walkAndEnemySearch == true ? enemySearchRange : attackRange * 2;
+        Collider2D[] colliders = Physics2D.OverlapBoxAll(transform.position, new Vector2(enemySearchRange, 1f), 0, LayerMask.GetMask(enemyLayer));
+        float minDistance = float.MaxValue;
+        Transform nearestEnemy = null;
+        
+        foreach (Collider2D collider in colliders)
+        {
+            if (collider.CompareTag(enemyTag))
             {
-                // attack the nearest enemy
-                Attack(nearestEnemy);
-                lastAttackTime = Time.time;
+                float distance = Mathf.Abs(transform.position.x - collider.transform.position.x);
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    nearestEnemy = collider.transform;
+                    sr.flipX = nearestEnemy.position.x > transform.position.x ? false : true;
+                    hands[0].isLeft = sr.flipX;
+                }
             }
         }
-        traceEnemy(nearestEnemy, distance);
+        
+        return nearestEnemy;        
     }
+
 
     private void traceEnemy(Transform nearestEnemy, float distance)
     {
@@ -357,20 +382,28 @@ public class MoveManager : MonoBehaviour
         sr.color = originalColor;
     }
 
-    private void Attack(Transform enemy)
+    private void Attack(Transform enemy, float attackSpped)
     {
         // perform the attack here
         Debug.Log("Attacking enemy: " + enemy.name);
         // you can use attackDamage variable to set the amount of damage to inflict on the enemy
-        hands[0].NormalAttackTriggerOn();
-
+        hands[0].meleeNormalAttackTriggerOn(attackSpped);
     }
 
+    IEnumerator AttackOff() {
+        yield return new WaitForSeconds(0.5f);
+    }
+
+
     //draw a gizmo to visualize the attack range in the editor
-    // private void OnDrawGizmosSelected()
-    // {
-    //     Debug.Log("Drawing gizmo");
-    //     Gizmos.color = Color.red;
-    //     Gizmos.DrawWireSphere(transform.position, attackRange);
-    // }
+    private void OnDrawGizmosSelected()
+    {
+        Debug.Log("Drawing gizmo");
+        Gizmos.color = Color.red;
+        //Gizmos.DrawWireSphere(transform.position, attackRange);
+
+        //Gizmos draw is Box
+        Vector2 pos = new Vector2(enemySearchRange, 1f);
+        Gizmos.DrawWireCube(transform.position, new Vector3(pos.x, pos.y, 0));
+    }
 }
