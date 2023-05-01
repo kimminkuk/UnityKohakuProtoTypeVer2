@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MeleeCommonMoveState : MonoBehaviour
+public class ClassCommonMoveState : MonoBehaviour
 {
     [Header("# Common Move State")]
     public float attackSpeed;
@@ -33,13 +33,11 @@ public class MeleeCommonMoveState : MonoBehaviour
     public Vector2 inputVec;
     public Hand[] hands;
 
-
-    //Player 2D 8-direction
-    // Enum for 8 possible directions
-    private int lastDirection = 0;
     private Vector3 movingDirection3D = Vector3.zero;
     [SerializeField]
     public WeaponManager.WeaponType weaponType;
+    public ClassManager.ClassType classType;
+    
 
     [Header("# Class Stat Info")]
     public int health;
@@ -62,13 +60,9 @@ public class MeleeCommonMoveState : MonoBehaviour
     /*
         Random Auto Movement Code
     */
-    public float timeBetweenMoves = 2f; // The time between each move
-    public float moveTime = 3f; // The time it takes to complete a move
     public float maxDistance = 5f; // The maximum distance the character can move in one direction
     public bool canMove; // Whether the character can currently move or not
 
-    private float moveTimer; // Timer for the current move
-    private float betweenTimer; // Timer for time between moves
     private Vector2 moveDirection; // Direction of current move    
     private string folderPath = "Sprites/Class";
     private string folderAnimPath = "Animation";
@@ -84,13 +78,12 @@ public class MeleeCommonMoveState : MonoBehaviour
     *    Ground Position Check
     */
     public float leftBoundary;
-    public float rightBoundary;    
-    private float groundPositionY = 0f;
+    public float rightBoundary;
     public bool ifFirstGround;
     public int isMoveLeft = 1;
     public bool isEdgeBound = true;
     public bool isLeavingGround = false;
-    public float leaveGroundTimer = 0.2f;    
+    public float leaveGroundTimer = 0.2f;
     public float leaveGroundSaveTime = 0.2f;
     public List<float> fallXpos = new List<float>();
 
@@ -112,30 +105,39 @@ public class MeleeCommonMoveState : MonoBehaviour
     private float lastAttackTime;
     private bool walkAndEnemySearch = false;
 
+    private int weaponTypeSelect = 0;
+    const int RANGE_ATTACK_THRESHOLD = 100;
+
     private void Awake() {
+        //GameManager의 floortPosObjectList를 가져옵니다.
+        
         health = maxHealth;
         mana = maxMana;
         anim = GetComponent<Animator>();
         sr = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
         hands = GetComponentsInChildren<Hand>(true);
-        fallXpos.Add(-14f);
+        switch(classType) {
+            case ClassManager.ClassType.Sword:
+                weaponTypeSelect = 1;
+                break;
+            case ClassManager.ClassType.Hammer:
+                weaponTypeSelect = 2;
+                break;
+            case ClassManager.ClassType.Staff:
+                weaponTypeSelect = 100;
+                break;
+        }
     }
     void Start()
     {
-        moveTimer = moveTime;
-        betweenTimer = timeBetweenMoves;        
-        if (sr.flipX) {
-            lastDirection = 2;
-        } else {
-            lastDirection = 6;
-        }
+        
     }    
 
     void Update()
     {   
         Transform nearestEnemy = null;
-        nearestEnemy = findNearestEnemy(isAttacking);
+        nearestEnemy = findNearestEnemy(isAttacking, weaponTypeSelect);
         if (!hands[0].isAttacking) {
             if (nearestEnemy) {
                 if (Vector2.Distance(transform.position, nearestEnemy.position) <= attackRange) {
@@ -154,10 +156,16 @@ public class MeleeCommonMoveState : MonoBehaviour
                 // 1. enemySearchTime 시간이 지나면, waitPos[0] 위치로 서서히 이동한다.
                 searchWaitTime += Time.deltaTime;
                 if (searchWaitTime > enemySearchTime) {
-                    //rb.MovePostion을 normalize해서 이동하면, 이동속도가 일정하게 유지된다.
-                    Vector2 direction = (waitPos[0].position - transform.position).normalized;
+                    Vector2 direction;
+                    if (weaponTypeSelect < RANGE_ATTACK_THRESHOLD) {
+                        direction = (waitPos[0].position - transform.position).normalized;
+                    } else {
+                        direction = (waitPos[1].position - transform.position).normalized;
+                    }
                     direction.y = 0f;   
                     Vector2 newPosition = new Vector2(transform.position.x + direction.x * moveSpeed * Time.deltaTime, transform.position.y);
+                    sr.flipX = direction.x < 0 ? true : false;
+                    hands[0].isLeft = sr.flipX;
                     rb.MovePosition(newPosition);
                     walkAndEnemySearch = true;
                 }
@@ -165,10 +173,16 @@ public class MeleeCommonMoveState : MonoBehaviour
         } 
     }
 
-    private Transform findNearestEnemy(bool isAttacking) {
+    private Transform findNearestEnemy(bool isAttacking, int searchRangeSelect) {
         if (isAttacking) return null;
+
         enemySearchRange = walkAndEnemySearch == true ? enemySearchRange : attackRange * 2;
-        Collider2D[] colliders = Physics2D.OverlapBoxAll(transform.position, new Vector2(enemySearchRange, 1f), 0, LayerMask.GetMask(enemyLayer));
+        Collider2D[] colliders;
+        if (searchRangeSelect < RANGE_ATTACK_THRESHOLD) 
+            colliders = Physics2D.OverlapBoxAll(transform.position, new Vector2(enemySearchRange, 1f), 0, LayerMask.GetMask(enemyLayer));
+        else 
+            colliders = Physics2D.OverlapCircleAll(transform.position, enemySearchRange, LayerMask.GetMask(enemyLayer));
+
         float minDistance = float.MaxValue;
         Transform nearestEnemy = null;
         
@@ -400,10 +414,20 @@ public class MeleeCommonMoveState : MonoBehaviour
     {
         Debug.Log("Drawing gizmo");
         Gizmos.color = Color.red;
+        
+        switch (classType) {
+            case ClassManager.ClassType.Sword:
+                Vector2 pos = new Vector2(enemySearchRange, 1f);
+                Gizmos.DrawWireCube(transform.position, new Vector3(pos.x, pos.y, 0));
+                break;
+            case ClassManager.ClassType.Staff:
+                Gizmos.DrawWireSphere(transform.position, attackRange);
+                break;
+        }
         //Gizmos.DrawWireSphere(transform.position, attackRange);
 
         //Gizmos draw is Box
-        Vector2 pos = new Vector2(enemySearchRange, 1f);
-        Gizmos.DrawWireCube(transform.position, new Vector3(pos.x, pos.y, 0));
+        // Vector2 pos = new Vector2(enemySearchRange, 1f);
+        // Gizmos.DrawWireCube(transform.position, new Vector3(pos.x, pos.y, 0));
     }
 }

@@ -30,14 +30,8 @@ public class EnemyMoveCommon : MonoBehaviour
 
     public bool isAttacked = false;
 
-    //Enemy Hand로 변경 예정..
-    //public Hand[] hands;
-
-    private int lastDirection = 0;
-    private Vector3 movingDirection3D = Vector3.zero;
-
     [Header("# Enemy Stat Info")]
-        public int health;
+    public int health;
     public int mana;
     public int maxHealth;
     public int maxMana;
@@ -86,11 +80,6 @@ public class EnemyMoveCommon : MonoBehaviour
     void Start()
     {   
         sr.color = new Color (1f, 1f, 1f, 1f);
-        if (sr.flipX) {
-            lastDirection = 6;
-        } else {
-            lastDirection = 2;
-        }        
     }
 
     // Update is called once per frame

@@ -29,8 +29,6 @@ public class Hand : MonoBehaviour
     Vector3 weaponPosAttackReverse = new Vector3(0.1f, -0.1f, 0);
     Quaternion weaponRotAttack = Quaternion.Euler(0, 0, -60);
     Quaternion weaponRotAttackReverse = Quaternion.Euler(0, 0, 60);
-
-    private bool normalAttack = false;
     
     // Enum Value Set, WeaponType
     [SerializeField]
@@ -96,6 +94,13 @@ public class Hand : MonoBehaviour
         weaponAnim.SetTrigger("N_Attack");
     }    
 
+    public void rangeNormalAttackTriggerOn(float speed)
+    {
+        weaponAnim.speed = speed;
+        //weaponAnim.SetBool("FlipX", flip);
+        weaponAnim.SetTrigger("N_Attack");
+    }    
+
     private void LateUpdate()
     {
         //1. isLeft true 이면, weaponAnim.SetBool("FlipX", true);
@@ -108,15 +113,7 @@ public class Hand : MonoBehaviour
         
     }
 
-    public void NormalAttackOn()
-    {
-        normalAttack = true;
-    }
 
-    public void NormalAttackOff()
-    {
-        normalAttack = false;
-    }
 
     public void normalAttackPosAndRot(bool isReverse)
     {

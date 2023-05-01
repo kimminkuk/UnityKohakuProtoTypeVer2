@@ -8,7 +8,7 @@ public class PoolCharcterManager : MonoBehaviour
     public GameObject[] prefabs;
 
     //2) Pool that lists
-    List<GameObject>[] pools;
+    public List<GameObject>[] pools;
 
     // Random Position Setting 3DVector, Z is 0
 

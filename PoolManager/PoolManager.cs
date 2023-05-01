@@ -21,7 +21,6 @@ public class PoolManager : MonoBehaviour
     //4) Get Object from Pool
     public GameObject GetObject(int prefabId) {
         GameObject obj = null;
-        Debug.Log("GetObject Called : " + prefabId );
         //5) Check Pool
         foreach(GameObject poolObj in pools[prefabId]) {
             if (!poolObj.activeSelf) {
@@ -31,13 +30,6 @@ public class PoolManager : MonoBehaviour
             }
         }
 
-        // for(int i = 0; i < pools[prefabId].Count; i++) {
-        //     if(!pools[prefabId][i].activeSelf) {
-        //         pools[prefabId][i].SetActive(true);
-        //         return pools[prefabId][i];
-        //     }
-        // }
-        Debug.Log("6) If Pool is Empty, Make New Object");
         //6) If Pool is Empty, Make New Object
         obj = Instantiate(prefabs[prefabId], transform);
         pools[prefabId].Add(obj);

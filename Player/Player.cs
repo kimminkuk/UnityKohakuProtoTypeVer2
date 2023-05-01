@@ -2,8 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-public class Player : MoveManager
+public class Player : MonoBehaviour
 {
+#if false
     [Header("# Player State")]
     public bool isPickingUp = false;
     //RididBody2D, SpriteRenderer, Anim Codes
@@ -181,7 +182,6 @@ public class Player : MoveManager
     }
     IEnumerator NormalAttack() {
         yield return new WaitForSeconds(0.25f);
-        hands[0].NormalAttackOff();
         isAttacking = false;
         attackInput = false;
     }
@@ -380,4 +380,5 @@ public class Player : MoveManager
         GetComponent<Rigidbody2D>().velocity = oldPlayer.GetComponent<Rigidbody2D>().velocity;
         // Set any other component values as needed
     }
+#endif    
 }
