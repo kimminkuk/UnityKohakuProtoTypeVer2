@@ -45,13 +45,11 @@ public class ItemDropClass : MonoBehaviour
     }
 
     public void PickupItemDropClass() {
-        Debug.Log("ItemDropClass PickupItemDropClass");
         gameObject.SetActive(false);
     }
 
     // weaponType return
     public WeaponManager.WeaponType PickupItemDropClassVer2() {
-        Debug.Log("ItemDropClass PickupItemDropClassVer2");
         gameObject.SetActive(false);        
         return weaponType;
     }

@@ -131,7 +131,7 @@ public class ClassCommonMoveState : MonoBehaviour
     }
     void Start()
     {
-        
+
     }    
 
     void Update()
@@ -228,7 +228,6 @@ public class ClassCommonMoveState : MonoBehaviour
         Vector2 moveDirection = new Vector2(distance, 0).normalized;
         //rb.MovePosition(rb.position + moveDirection * speed * Time.fixedDeltaTime);
         rb.MovePosition(rb.position + moveDirection * moveSpeed * Time.fixedDeltaTime);
-        Debug.Log("transform.position : " + transform.position);
     }
 
     // Update is called once per frame
@@ -375,7 +374,7 @@ public class ClassCommonMoveState : MonoBehaviour
 
     public void Die() {
         //Die
-        Debug.Log("Enemy Died");
+
         //Disable the enemy
         //gameObject.SetActive(false);
         Destroy(gameObject);
@@ -398,8 +397,6 @@ public class ClassCommonMoveState : MonoBehaviour
 
     private void Attack(Transform enemy, float attackSpped)
     {
-        // perform the attack here
-        Debug.Log("Attacking enemy: " + enemy.name);
         // you can use attackDamage variable to set the amount of damage to inflict on the enemy
         hands[0].meleeNormalAttackTriggerOn(attackSpped);
     }
@@ -412,7 +409,6 @@ public class ClassCommonMoveState : MonoBehaviour
     //draw a gizmo to visualize the attack range in the editor
     private void OnDrawGizmosSelected()
     {
-        Debug.Log("Drawing gizmo");
         Gizmos.color = Color.red;
         
         switch (classType) {

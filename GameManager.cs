@@ -64,7 +64,8 @@ public class GameManager : MonoBehaviour
             //Get 0,1 Random Code
             // PoolCharacterManager 클래스의 pools list의 count를 가져옵니다.
             
-            int getClassChangeIndex = Random.Range(0, poolCharcter.pools.Length);
+            //int getClassChangeIndex = Random.Range(0, poolCharcter.pools.Length);
+            int getClassChangeIndex = 2;
             int meleeCount = 2;
             int floorSelect = 0;
             if (getClassChangeIndex >= meleeCount) {

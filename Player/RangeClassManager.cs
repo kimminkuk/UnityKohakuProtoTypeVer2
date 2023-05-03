@@ -5,6 +5,8 @@ using UnityEngine;
 public class RangeClassManager : MonoBehaviour
 {
  [Header("# Common Move State")]
+    public int bulletCommonDamage;
+    public float attackDelayTime;
     public float attackSpeed;
     public float moveSpeed = 5f;
     public float gravitySpeed;
@@ -112,9 +114,16 @@ public class RangeClassManager : MonoBehaviour
     private int weaponTypeSelect = 0;
     const int RANGE_ATTACK_THRESHOLD = 100;
 
+    private float FLOOR_1_X_RIGHT_LIMIT = 3f;
+
+    /*
+    *    Auto-Range Attack Timer
+    */
+    private float RangeAttackTimer = 0f;
+
     private void Awake() {
         //GameManager의 floortPosObjectList를 가져옵니다.
-        
+        setDefault();
         health = maxHealth;
         mana = maxMana;
         anim = GetComponent<Animator>();
@@ -144,19 +153,18 @@ public class RangeClassManager : MonoBehaviour
         nearestEnemy = findNearestEnemy(isAttacking, weaponTypeSelect);
         if (!isAttacking) {
             if (nearestEnemy) {
+                RangeAttackTimer += Time.deltaTime;
                 if (Vector2.Distance(transform.position, nearestEnemy.position) <= attackRange) {
-                    walkAndEnemySearch = true;
-                    searchWaitTime = 0f;
-                    isAttacking = true;
-                    Attack(nearestEnemy, attackSpeed);
-                    LaunchMissileVer3(nearestEnemy, 0);
-                    StartCoroutine(AttackOff());
-                    isAttacking = false;
+                    if (attackDelay <= RangeAttackTimer) {
+                        RangeNormalAttack(nearestEnemy, attackSpeed);
+                        RangeAttackTimer = 0f;
+                    }
                 } else {
                     if (isAttacking) return;
                     Vector2 direction = (nearestEnemy.position - transform.position);
                     direction.y = 0f;           
                     Vector2 newPosition = new Vector2(nearestEnemy.position.x, transform.position.y);
+                    if (newPosition.x > FLOOR_1_X_RIGHT_LIMIT) return;
                     rb.MovePosition(Vector2.Lerp(transform.position, newPosition, Time.deltaTime * moveSpeed));                
                 }
             } else {
@@ -166,14 +174,83 @@ public class RangeClassManager : MonoBehaviour
                     Vector2 direction = (waitPos[1].position - transform.position).normalized;
                     direction.y = 0f;   
                     Vector2 newPosition = new Vector2(transform.position.x + direction.x * moveSpeed * Time.deltaTime, transform.position.y);
+                    
                     sr.flipX = direction.x < 0 ? true : false;
                     hands[0].isLeft = sr.flipX;
-                    rb.MovePosition(newPosition);
                     walkAndEnemySearch = true;
+
+                    if (newPosition.x > FLOOR_1_X_RIGHT_LIMIT) return;
+                    rb.MovePosition(newPosition);
                 }
             }
         } 
     }
+    void RangeNormalAttack(Transform enemy, float attackSpeed)
+    {
+        walkAndEnemySearch = true;
+        searchWaitTime = 0f;
+        isAttacking = true;
+        Attack(enemy, attackSpeed);
+        LaunchMissileVer3(enemy, 0);
+        isAttacking = false;
+    }    
+    // IEnumerator RangeNormalAttack(Transform enemy, float attackSpeed)
+    // {
+    //     walkAndEnemySearch = true;
+    //     searchWaitTime = 0f;
+    //     isAttacking = true;
+    //     //yield return new WaitForSeconds(2f);
+    //     Attack(enemy, attackSpeed);
+    //     yield return new WaitForSeconds(2f);
+    //     LaunchMissileVer3(enemy, 0);
+    //     isAttacking = false;
+    // }
+
+    private void Attack(Transform enemy, float attackSpped)
+    {
+        hands[0].rangeNormalAttackTriggerOn(enemy, attackSpped);
+    }
+
+    // IEnumerator LaunchMissileVer3(Transform enemyPos, int bulletStyle, float attackSpeed)
+    // {
+    //     yield return new WaitForSeconds(1f / attackSpeed);
+    //     Vector2 direction = (Vector2)enemyPos.position - (Vector2)transform.position;
+    //     direction.Normalize();
+    //     Transform bullet = GameManager.instance.pool.GetObject(bulletStyle).transform;
+    //     bullet.position = transform.position + (sr.flipX ? new Vector3(0.5f, 0, 0) : new Vector3(-0.5f, 0, 0));
+
+    //     bullet.position = transform.position;
+    //     bullet.rotation = Quaternion.FromToRotation(Vector3.up, direction);
+    //     bullet.GetComponent<Bullet>().InitVer2(bulletCommonDamage, 1, direction);
+    //     StartCoroutine(MissileActiveFalse(bullet.gameObject));
+    // }
+
+    void LaunchMissileVer3(Transform enemyPos, int bulletStyle)
+    {
+        Vector2 direction = (Vector2)enemyPos.position - (Vector2)transform.position;
+        direction.Normalize();
+        Transform bullet = GameManager.instance.pool.GetObject(bulletStyle).transform;
+        bullet.position = transform.position + (sr.flipX ? new Vector3(0.5f, 0, 0) : new Vector3(-0.5f, 0, 0));
+
+        bullet.position = transform.position;
+        bullet.rotation = Quaternion.FromToRotation(Vector3.up, direction);
+        bullet.GetComponent<Bullet>().InitVer2(bulletCommonDamage, 1, direction);
+        StartCoroutine(MissileActiveFalse(bullet.gameObject));
+    }
+
+
+
+    IEnumerator AttackStop(float attackSpeed)
+    {
+        yield return new WaitForSeconds(attackSpeed);
+    }
+
+    IEnumerator SetAttacking(bool isAttacking, float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        this.isAttacking = isAttacking;
+    }
+
 
     private Transform findNearestEnemy(bool isAttacking, int searchRangeSelect) {
         if (isAttacking) return null;
@@ -226,7 +303,6 @@ public class RangeClassManager : MonoBehaviour
         Vector2 moveDirection = new Vector2(distance, 0).normalized;
         //rb.MovePosition(rb.position + moveDirection * speed * Time.fixedDeltaTime);
         rb.MovePosition(rb.position + moveDirection * moveSpeed * Time.fixedDeltaTime);
-        Debug.Log("transform.position : " + transform.position);
     }
 
     // Update is called once per frame
@@ -239,36 +315,12 @@ public class RangeClassManager : MonoBehaviour
         rb.velocity = new Vector2(0, -gravitySpeed);
     }
 
-    void LaunchMissileVer3(Transform enemyPos, int bulletStyle)
-    {
-        Vector2 direction = (Vector2)enemyPos.position - (Vector2)transform.position;
-        direction.Normalize();
-        //GameManager.instance.pool.GetObject(bulletStyle).transform null check
-        Transform bullet = GameManager.instance.pool.GetObject(bulletStyle).transform;
-
-        //bullet position을 sr.flipX가 true면, transform.position.x를 +0.5f 합니다.
-        //  sr.flipX가 false면, transform.position.x를 -0.5f 합니다.
-        bullet.position = transform.position + (sr.flipX ? new Vector3(0.5f, 0, 0) : new Vector3(-0.5f, 0, 0));
-
-        bullet.position = transform.position;
-        bullet.rotation = Quaternion.FromToRotation(Vector3.up, direction);
-        bullet.GetComponent<Bullet>().InitVer2(10, 1, direction); // -1 is Infinity Per.
-        // 3sec After, missile is SetActive False
-        StartCoroutine(MissileActiveFalse(bullet.gameObject));
-    }
-
-
     private void OnTriggerEnter2D(Collider2D other) {
 
         // Floor 에서는 원거리 공격을 합니다.
         if (other.gameObject.tag == "Floor") {
             isMoving = true;
         } 
-        
-        // Ground 에서는 근거리 공격을 합니다.
-        if (other.gameObject.tag == "Ground") {
-            isMoving = true;
-        }
     }
 
     public int Get2D8DirectionMoveToInt(Vector2 inputDir) {
@@ -400,13 +452,11 @@ public class RangeClassManager : MonoBehaviour
         }
         
         StartCoroutine(FlashSprite());
-
-
     }
 
     public void Die() {
         //Die
-        Debug.Log("Enemy Died");
+        
         //Disable the enemy
         //gameObject.SetActive(false);
         Destroy(gameObject);
@@ -427,12 +477,8 @@ public class RangeClassManager : MonoBehaviour
         sr.color = originalColor;
     }
 
-    private void Attack(Transform enemy, float attackSpped)
-    {
-        // perform the attack here
-        Debug.Log("Attacking enemy: " + enemy.name);
-        // you can use attackDamage variable to set the amount of damage to inflict on the enemy
-        hands[0].rangeNormalAttackTriggerOn(attackSpped);
+    IEnumerator AttackOffTemp() {
+        yield return new WaitForSeconds(0.1f);
     }
 
     IEnumerator AttackOff() {
@@ -447,8 +493,22 @@ public class RangeClassManager : MonoBehaviour
     //draw a gizmo to visualize the attack range in the editor
     private void OnDrawGizmosSelected()
     {
-        Debug.Log("Drawing gizmo");
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+        // Gizmos.color = Color.red;
+        // Gizmos.DrawWireSphere(transform.position, attackRange);
     }
+    void setDefault() {
+        isGrounded = false;
+        isJumping = false;
+        isFalling = false;
+        isCrouching = false;
+        isRunning = false;
+        isSprinting = false;
+        isWalking = false;
+        isIdle = false;
+        isMoving = false;
+        isAttacking = false;
+        isMoveLeft = 1;
+        ifFirstGround = false;
+        canMove = false;
+    }    
 }

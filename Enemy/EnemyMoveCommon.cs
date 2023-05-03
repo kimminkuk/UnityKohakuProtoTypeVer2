@@ -123,7 +123,6 @@ public class EnemyMoveCommon : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other) {
         if (other.gameObject.tag == "Ground") {
-            Debug.Log("...Call?");
             canMove = true;
             isMoveLeft *= -1;
             isGrounded = true;  
@@ -146,7 +145,6 @@ public class EnemyMoveCommon : MonoBehaviour
         }
         if (other.gameObject.tag == "GroundEdge") {
             {
-                Debug.Log("falling");
                 isGrounded = false;
                 isLeavingGround = true;
                 isMoving = false;
@@ -156,7 +154,6 @@ public class EnemyMoveCommon : MonoBehaviour
 
     //take Damage
     public void TakeDamage(int damage) {
-        Debug.Log("Enemy Take Damage");
         health -= damage;
         //canMove = false;
         isAttacked = true;
@@ -208,7 +205,6 @@ public class EnemyMoveCommon : MonoBehaviour
 
     public void TakeDamage(int damage, Vector2 knockbackDirection, float knockbackTime)
     {
-        Debug.Log("Enemy Take Damage");
         health -= damage;
 
         // Apply knockback force

@@ -94,12 +94,13 @@ public class Hand : MonoBehaviour
         weaponAnim.SetTrigger("N_Attack");
     }    
 
-    public void rangeNormalAttackTriggerOn(float speed)
+    public void rangeNormalAttackTriggerOn(Transform enemyPos, float speed)
     {
+        //if (isAttacking) return;
         weaponAnim.speed = speed;
-        //weaponAnim.SetBool("FlipX", flip);
         weaponAnim.SetTrigger("N_Attack");
-    }    
+        //isAttacking = false;
+    }
 
     private void LateUpdate()
     {
@@ -129,7 +130,6 @@ public class Hand : MonoBehaviour
 
     public void NormalAttackMagicGuy(bool isReverse)
     {
-        Debug.Log("here?"); 
         transform.localRotation = isReverse ? weaponRotAttackReverse : weaponRotAttack;
         transform.localPosition = isReverse ? weaponPosAttackReverse : weaponPosAttack;
     }
@@ -158,7 +158,6 @@ public class Hand : MonoBehaviour
                 normalAttackPos[(int)E_flipXState.Reverse] = new Vector3(0f, 0f, 0f);
                 break;                
             default:
-                Debug.LogError("Invalid weapon type!"); // handle invalid weapon types
                 break;
         }
         
@@ -180,7 +179,6 @@ public class Hand : MonoBehaviour
                 idealPos[(int)E_flipXState.Reverse] = new Vector3(0.5f, -0.1f, 0);
                 break;
             default:
-                Debug.LogError("Invalid weapon type!"); // handle invalid weapon types
                 break;
         }
         
@@ -206,7 +204,6 @@ public class Hand : MonoBehaviour
             default:
                 rot[(int)E_flipXState.Normal] = Quaternion.Euler(0f, 0f, 0f);
                 rot[(int)E_flipXState.Reverse] = Quaternion.Euler(0f, 0f, 0f);            
-                Debug.LogError("Invalid weapon type!"); // handle invalid weapon types
                 break;
         }
         return rot;
@@ -227,8 +224,7 @@ public class Hand : MonoBehaviour
                 break;
             default:
                 rot[(int)E_flipXState.Normal] = Quaternion.Euler(0f, 0f, 0f);
-                rot[(int)E_flipXState.Reverse] = Quaternion.Euler(0f, 0f, 0f);            
-                Debug.LogError("Invalid weapon type!"); // handle invalid weapon types
+                rot[(int)E_flipXState.Reverse] = Quaternion.Euler(0f, 0f, 0f);
                 break;
         }
         return rot;
@@ -273,18 +269,15 @@ public class Hand : MonoBehaviour
 
         //뭐지?????? sprite가 안바뀜...????? Anim은 바꼇는데????
         spriter.sprite = Resources.Load<Sprite>(folderPath + "/" + spriteName);
-        Debug.Log("spriteName: " + spriteName + "spriter.sprite: " + spriter.sprite);
         weaponAnim.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(folderAnimPath + "/" + weaponName);
     }
 
     private void OnTriggerEnter2D(Collider2D other) {
         if (isAttacking) {
-            Debug.Log("Hands OnTriggerEnter2D");
             if (other.CompareTag("Enemy")) {
                 //other.GetComponent<EnemyMoveCommon>().TakeDamage(weaponDamage);
                 
                 other.GetComponent<EnemyMoveCommon>().TakeDamage(weaponDamage, transform.position - other.transform.position , knockbackTime);
-                
             }
         }
         // if (other.CompareTag("Enemy")) {

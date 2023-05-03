@@ -95,6 +95,7 @@ public class Bullet : MonoBehaviour
         // per--;
         if (collision.CompareTag("Enemy")) {
             collision.GetComponent<EnemyMoveCommon>().TakeDamage(this.damage, transform.position - collision.transform.position , knockbackTime);
+            gameObject.SetActive(false);
         }
 
         //if collision tag, Ground... => Destroy

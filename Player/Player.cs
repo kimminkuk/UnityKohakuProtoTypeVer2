@@ -93,8 +93,6 @@ public class Player : MonoBehaviour
                     activeItem.SetActive(false);
                 }
                 activeItem = null;
-                Debug.Log("Item picked up and added to inventory");
-                Debug.Log("Player weaponType: " + weaponType);
                 
                 //Change the Class,Weapon Type
                 // base.weaponType = weaponType;
@@ -109,7 +107,6 @@ public class Player : MonoBehaviour
 #if false
                 // Change to the Class
                 string prefabClassName = GetPrefabClassName(weaponType);
-                Debug.Log("prefabClassName: " + prefabClassName);
                 GameObject prefab = Resources.Load<GameObject>("Prefabs/" + prefabClassName);
 
                 //한번 더, 바꾸면 Gameobject 없다함
@@ -164,7 +161,6 @@ public class Player : MonoBehaviour
             //StartCoroutine(NormalAttackCasting());
             LaunchMissileVer3(PlayerLastDirection);
             StartCoroutine(NormalAttack());
-            Debug.Log("Attack?");
         }
     }
 
@@ -266,18 +262,12 @@ public class Player : MonoBehaviour
         if (collision.CompareTag("Item")) {
             canPickup = true;
             activeItem = collision.gameObject;
-            Debug.Log("OnTriggerEnter2D Item");
         }
     }
     private void OnTriggerExit2D(Collider2D collision) {
         if (collision.CompareTag("Item")) {
-            Debug.Log("OnTriggerExit2D Item");
             canPickup = false;
         }
-    }
-    private void PickUpItem()
-    {
-        Debug.Log("How to Destroy?");
     }
     // GetPrefabClassName Func
     // 1. return string of prefabClassName
@@ -308,11 +298,6 @@ public class Player : MonoBehaviour
         // Get the newObjs's components
         Component[] newObjComponents = newObj.GetComponents<Component>();
         
-        foreach (Component c in newObjComponents) {
-            Debug.Log("test: " + c.GetType());
-            //
-        }
-
         // Copy the player's components to the new object
         Component[] components = playerObject.GetComponents<Component>();
         List<Component> newComponents = new List<Component>();

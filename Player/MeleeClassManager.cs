@@ -5,6 +5,7 @@ using UnityEngine;
 public class MeleeClassManager : MonoBehaviour
 {
  [Header("# Common Move State")]
+    public float attackDelayTime;
     public float attackSpeed;
     public float moveSpeed = 5f;
     public float gravitySpeed;
@@ -113,7 +114,7 @@ public class MeleeClassManager : MonoBehaviour
 
     private void Awake() {
         //GameManager의 floortPosObjectList를 가져옵니다.
-        
+        setDefault();
         health = maxHealth;
         mana = maxMana;
         anim = GetComponent<Animator>();
@@ -144,12 +145,7 @@ public class MeleeClassManager : MonoBehaviour
         if (!isAttacking) {
             if (nearestEnemy) {
                 if (Vector2.Distance(transform.position, nearestEnemy.position) <= attackRange) {
-                    walkAndEnemySearch = true;
-                    isAttacking = true;
-                    searchWaitTime = 0f;
-                    Attack(nearestEnemy, attackSpeed);
-                    StartCoroutine(AttackOff());
-                    isAttacking = false;
+                    StartCoroutine(MeleeNormalAttack(nearestEnemy));
                 } else {
                     if (isAttacking) return;
                     Vector2 direction = (nearestEnemy.position - transform.position);
@@ -172,6 +168,17 @@ public class MeleeClassManager : MonoBehaviour
             }
         } 
     }
+
+    IEnumerator MeleeNormalAttack(Transform enemy)
+    {
+        walkAndEnemySearch = true;
+        searchWaitTime = 0f;
+        isAttacking = true;
+        Attack(enemy, attackSpeed);
+        yield return new WaitForSeconds(attackDelayTime);
+        StartCoroutine(AttackOff());
+        isAttacking = false;
+    }    
 
     private Transform findNearestEnemy(bool isAttacking, int searchRangeSelect) {
         if (isAttacking) return null;
@@ -222,7 +229,6 @@ public class MeleeClassManager : MonoBehaviour
         Vector2 moveDirection = new Vector2(distance, 0).normalized;
         //rb.MovePosition(rb.position + moveDirection * speed * Time.fixedDeltaTime);
         rb.MovePosition(rb.position + moveDirection * moveSpeed * Time.fixedDeltaTime);
-        Debug.Log("transform.position : " + transform.position);
     }
 
     // Update is called once per frame
@@ -369,7 +375,6 @@ public class MeleeClassManager : MonoBehaviour
 
     public void Die() {
         //Die
-        Debug.Log("Enemy Died");
         //Disable the enemy
         //gameObject.SetActive(false);
         Destroy(gameObject);
@@ -393,7 +398,6 @@ public class MeleeClassManager : MonoBehaviour
     private void Attack(Transform enemy, float attackSpped)
     {
         // perform the attack here
-        Debug.Log("Attacking enemy: " + enemy.name);
         // you can use attackDamage variable to set the amount of damage to inflict on the enemy
         hands[0].meleeNormalAttackTriggerOn(attackSpped);
     }
@@ -406,9 +410,23 @@ public class MeleeClassManager : MonoBehaviour
     //draw a gizmo to visualize the attack range in the editor
     private void OnDrawGizmosSelected()
     {
-        Debug.Log("Drawing gizmo");
-        Gizmos.color = Color.red;
-        Vector2 pos = new Vector2(enemySearchRange, 1f);
-        Gizmos.DrawWireCube(transform.position, new Vector3(pos.x, pos.y, 0));
+        // Gizmos.color = Color.red;
+        // Vector2 pos = new Vector2(enemySearchRange, 1f);
+        // Gizmos.DrawWireCube(transform.position, new Vector3(pos.x, pos.y, 0));
     }
+    void setDefault() {
+        isGrounded = false;
+        isJumping = false;
+        isFalling = false;
+        isCrouching = false;
+        isRunning = false;
+        isSprinting = false;
+        isWalking = false;
+        isIdle = false;
+        isMoving = false;
+        isAttacking = false;
+        isMoveLeft = 1;
+        ifFirstGround = false;
+        canMove = false;
+    }     
 }
