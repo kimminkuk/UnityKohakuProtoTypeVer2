@@ -35,6 +35,26 @@ public class PoolManager : MonoBehaviour
         pools[prefabId].Add(obj);
         return obj;
     }
+
+    public GameObject GetObjectVer2(int prefabId) {
+        GameObject obj = null;
+        //5) Check Pool
+        foreach(GameObject poolObj in pools[prefabId]) {
+            if (!poolObj.activeSelf) {
+                obj = poolObj;
+                obj.SetActive(true);
+                break;
+            }
+        }
+
+        //6) If Pool is Empty, Make New Object
+        if (!obj) {
+            obj = Instantiate(prefabs[prefabId], transform);
+            pools[prefabId].Add(obj);
+        }
+        return obj;
+    }
+
     public GameObject Get(int index)
     {
         GameObject select = null;

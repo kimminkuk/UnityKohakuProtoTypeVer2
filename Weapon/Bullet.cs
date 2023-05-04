@@ -80,25 +80,12 @@ public class Bullet : MonoBehaviour
 
     // 충돌이 일어났을 때, 호출되는 함수
     private void OnTriggerEnter2D(Collider2D collision) {
-        // // 충돌한 상대방의 태그가 "Enemy"이면
-        // if(collision.CompareTag("Enemy") ) {
-        //     // 상대방의 Enemy 컴포넌트를 가져온다.
-        //     Enemy enemy = collision.GetComponent<Enemy>();
-        //     // 상대방의 Enemy 컴포넌트의 OnDamaged 함수를 호출한다.
-        //     enemy.OnDamaged(damage, per);
-        //     // 자신의 Bullet 오브젝트를 파괴한다.
-        //     Destroy(gameObject);
-        // }
-        //if (!collision.CompareTag("Enemy") || per == -1)
-        // if (per == -1)
-        //     return;
-        // per--;
+
         if (collision.CompareTag("Enemy")) {
             collision.GetComponent<EnemyMoveCommon>().TakeDamage(this.damage, transform.position - collision.transform.position , knockbackTime);
             gameObject.SetActive(false);
         }
 
-        //if collision tag, Ground... => Destroy
         if (collision.CompareTag("Ground")) {
             gameObject.SetActive(false);
         }
@@ -122,6 +109,8 @@ public class Bullet : MonoBehaviour
     IEnumerator DeactivateBullet(GameObject bulletObject, float time)
     {
         yield return new WaitForSeconds(time);
-        bulletObject.SetActive(false);
+        
+        //Destroy
+        Destroy(bulletObject);
     }    
 }

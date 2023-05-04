@@ -203,6 +203,41 @@ public class EnemyMoveCommon : MonoBehaviour
         sr.color = originalColor;
     }
 
+    private IEnumerator FlashAndKnockbackVer2(GameObject obj, Vector2 knockbackDirection, float knockbackTime) {
+        obj.SetActive(false);
+        Color originalColor = new Color(1f, 1f, 1f, 1f);
+        float elapsed = 0f;
+        bool isFlashing = true;   
+        while (elapsed < knockbackTime) {
+            rb.MovePosition(transform.position);
+            if (isFlashing) {
+                sr.color = flashColor;
+            } else {
+                sr.color = originalColor;
+            }
+            isFlashing = !isFlashing;
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        sr.color = originalColor;
+    }    
+
+    public void TakeDamageFromHand(int damage, Vector2 knockbackDirection, float knockbackTime)
+    {
+        health -= damage;
+
+        // Apply knockback force
+        //rb.velocity = knockbackDirection.normalized * knockbackForce * 100000;
+        knockbackDirection.y = 0f;
+        if (gameObject.activeInHierarchy) {
+            StartCoroutine(FlashAndKnockback(knockbackDirection, knockbackTime));
+        }
+        if (health <= 0)
+        {
+            Die();
+        }
+    }
+
     public void TakeDamage(int damage, Vector2 knockbackDirection, float knockbackTime)
     {
         health -= damage;

@@ -4,6 +4,11 @@ using UnityEngine;
 
 public class Hand : MonoBehaviour
 {
+    [Header("# Range Weapon")]
+    const int STAFF_1_ATTACK_DAMAGE = 10;
+    private int rangeWeaponAttackDamage;
+    private int bulletStyle;
+
     public float knockbackTime;
     public int weaponDamage;
     public bool isAttacking;
@@ -54,6 +59,8 @@ public class Hand : MonoBehaviour
                 spriteName = "Normal_Sword";
                 break;
             case WeaponManager.WeaponType.Staff:
+                bulletStyle = 0;
+                rangeWeaponAttackDamage = STAFF_1_ATTACK_DAMAGE;
                 spriteName = "Normal_Staff";
                 break;
             case WeaponManager.WeaponType.Hammer:
@@ -96,10 +103,21 @@ public class Hand : MonoBehaviour
 
     public void rangeNormalAttackTriggerOn(Transform enemyPos, float speed)
     {
-        //if (isAttacking) return;
+        if (isAttacking) return;
         weaponAnim.speed = speed;
-        weaponAnim.SetTrigger("N_Attack");
-        //isAttacking = false;
+        weaponAnim.SetTrigger("N_Attack");        
+        LaunchMissileVer3(enemyPos, bulletStyle);
+        isAttacking = false;
+    }
+
+    void LaunchMissileVer3(Transform enemyPos, int bulletStyle)
+    {
+        Vector2 direction = (Vector2)enemyPos.position - (Vector2)transform.position;
+        direction.Normalize();
+        Transform bullet = GameManager.instance.pool.GetObjectVer2(bulletStyle).transform;
+        bullet.position = transform.position;
+        bullet.rotation = Quaternion.FromToRotation(Vector3.up, direction);
+        bullet.GetComponent<Bullet>().InitVer2(rangeWeaponAttackDamage, 1, direction);
     }
 
     private void LateUpdate()
@@ -277,7 +295,7 @@ public class Hand : MonoBehaviour
             if (other.CompareTag("Enemy")) {
                 //other.GetComponent<EnemyMoveCommon>().TakeDamage(weaponDamage);
                 
-                other.GetComponent<EnemyMoveCommon>().TakeDamage(weaponDamage, transform.position - other.transform.position , knockbackTime);
+                other.GetComponent<EnemyMoveCommon>().TakeDamageFromHand(weaponDamage, transform.position - other.transform.position , knockbackTime);
             }
         }
         // if (other.CompareTag("Enemy")) {
