@@ -100,8 +100,6 @@ public class RangeClassManager : MonoBehaviour
     */
     public List<Transform> waitPos = new List<Transform>();
     public float enemySearchRange = 5f;
-    private float enemySearchTime = 0.3f;
-    private float searchWaitTime = 0f;
     public float attackRange = 0.5f;
     public string enemyTag = "Enemy";
     public string enemyLayer = "Enemy";
@@ -109,12 +107,9 @@ public class RangeClassManager : MonoBehaviour
 
     private Transform target;
     private float lastAttackTime;
-    private bool walkAndEnemySearch = false;
 
     private int weaponTypeSelect = 0;
     const int RANGE_ATTACK_THRESHOLD = 100;
-
-    private float FLOOR_1_X_RIGHT_LIMIT = 3f;
 
     /*
     *    Auto-Range Attack Timer
@@ -156,7 +151,7 @@ public class RangeClassManager : MonoBehaviour
             if (nearestEnemy) {
                 RangeAttackTimer += Time.deltaTime;
                 if (Vector2.Distance(transform.position, nearestEnemy.position) <= attackRange) {
-                    if ((attackDelay / attackSpeed) < (RangeAttackTimer + AUTO_STOP * attackSpeed)) {
+                    if ((attackDelay / attackSpeed) < (RangeAttackTimer + AUTO_STOP / attackSpeed)) {
                         RangeNormalAttack(nearestEnemy, attackSpeed);
                         RangeAttackTimer = 0f;
                     }
@@ -166,8 +161,6 @@ public class RangeClassManager : MonoBehaviour
     }
     void RangeNormalAttack(Transform enemy, float attackSpeed)
     {
-        walkAndEnemySearch = true;
-        searchWaitTime = 0f;
         isAttacking = true;
         Attack(enemy, attackSpeed);
         //LaunchMissileVer3(enemy, 0);
@@ -175,8 +168,6 @@ public class RangeClassManager : MonoBehaviour
     }    
     // IEnumerator RangeNormalAttack(Transform enemy, float attackSpeed)
     // {
-    //     walkAndEnemySearch = true;
-    //     searchWaitTime = 0f;
     //     isAttacking = true;
     //     //yield return new WaitForSeconds(2f);
     //     Attack(enemy, attackSpeed);

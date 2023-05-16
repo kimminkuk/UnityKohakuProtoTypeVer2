@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class ClassCommonMoveState : MonoBehaviour
 {
+#if false
     [Header("# Common Move State")]
     public float attackSpeed;
     public float moveSpeed = 5f;
@@ -426,4 +427,5 @@ public class ClassCommonMoveState : MonoBehaviour
         // Vector2 pos = new Vector2(enemySearchRange, 1f);
         // Gizmos.DrawWireCube(transform.position, new Vector3(pos.x, pos.y, 0));
     }
+#endif    
 }

@@ -48,6 +48,14 @@ public class Hand : MonoBehaviour
     
     private string spriteName;
 
+    /*
+    *   Auto-Melee Game
+    */
+    bool hasTouched = false;
+    List<Collider2D> collidedObjects = new List<Collider2D>();
+    public float attackSpeed;
+    private float ATTACK_DELAY = 1f;
+
     private string folderAnimPath = "Animation/Weapon";
     private void Awake()
     {
@@ -57,6 +65,7 @@ public class Hand : MonoBehaviour
         switch(weaponType) {
             case WeaponManager.WeaponType.Sword:
                 spriteName = "Normal_Sword";
+                attackSpeed = 2f;
                 break;
             case WeaponManager.WeaponType.Staff:
                 bulletStyle = 0;
@@ -94,11 +103,12 @@ public class Hand : MonoBehaviour
         weaponAnim.SetTrigger("N_Attack");
     }
 
-    public void meleeNormalAttackTriggerOn(float speed)
+    public void meleeNormalAttackTriggerOn(Transform enemyPos, float speed)
     {
+        if (isAttacking) return;
         weaponAnim.speed = speed;
-        //weaponAnim.SetBool("FlipX", flip);
         weaponAnim.SetTrigger("N_Attack");
+        
     }    
 
     public void rangeNormalAttackTriggerOn(Transform enemyPos, float speed)
@@ -131,8 +141,6 @@ public class Hand : MonoBehaviour
         // isLeft 가 false면, weaponAnim을 오른쪽으로 한다.
         
     }
-
-
 
     public void normalAttackPosAndRot(bool isReverse)
     {
@@ -291,15 +299,26 @@ public class Hand : MonoBehaviour
     }
 
     private void OnTriggerEnter2D(Collider2D other) {
-        if (isAttacking) {
-            if (other.CompareTag("Enemy")) {
-                //other.GetComponent<EnemyMoveCommon>().TakeDamage(weaponDamage);
-                
-                other.GetComponent<EnemyMoveCommon>().TakeDamageFromHand(weaponDamage, transform.position - other.transform.position , knockbackTime);
-            }
+        // if (isAttacking) 
+        // {
+        //     if (other.CompareTag("Enemy")) {       
+        //         other.GetComponent<EnemyMoveCommon>().TakeDamageFromHand(weaponDamage, transform.position - other.transform.position , knockbackTime);
+        //     }
+        // }
+        if (other.CompareTag("Enemy")) {
+            if (hasTouched || collidedObjects.Contains(other)) return;
+            collidedObjects.Add(other);
+            hasTouched = true;
+            Collider2D isFirstCollider = collidedObjects[0];
+            isFirstCollider.GetComponent<EnemyMoveCommon>().TakeDamageFromHand(weaponDamage, transform.position - isFirstCollider.transform.position , knockbackTime);
+            collidedObjects.Clear();
+            Invoke("ResetHasTouched", ATTACK_DELAY / attackSpeed);
         }
-        // if (other.CompareTag("Enemy")) {
-        //     other.GetComponent<EnemyMoveCommon>().TakeDamage(weaponDamage);
-        // }        
     }
+    private void ResetHasTouched() {
+        Debug.Log("ResetHasTouched");
+        hasTouched = false;
+    }
+
+    // 무기를 flip 할 때는, OnTrigger 빼버리기 (공격 안하게)
 }

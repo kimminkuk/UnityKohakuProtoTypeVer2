@@ -103,7 +103,6 @@ public class MeleeClassManager : MonoBehaviour
     public float attackRange = 0.5f;
     public string enemyTag = "Enemy";
     public string enemyLayer = "Enemy";
-    public float attackDelay = 1f;
 
     private Transform target;
     private float lastAttackTime;
@@ -111,6 +110,12 @@ public class MeleeClassManager : MonoBehaviour
 
     private int weaponTypeSelect = 0;
     const int RANGE_ATTACK_THRESHOLD = 100;
+
+    /*
+    *    Auto-Melee Attack Timer
+    */
+    private float AUTO_STOP = 0.1f;
+    private float MeleeAttackTimer = 0f;
 
     private void Awake() {
         //GameManager의 floortPosObjectList를 가져옵니다.
@@ -144,8 +149,14 @@ public class MeleeClassManager : MonoBehaviour
         nearestEnemy = findNearestEnemy(isAttacking, weaponTypeSelect);
         if (!isAttacking) {
             if (nearestEnemy) {
+                MeleeAttackTimer += Time.deltaTime;
                 if (Vector2.Distance(transform.position, nearestEnemy.position) <= attackRange) {
-                    StartCoroutine(MeleeNormalAttack(nearestEnemy));
+                    //StartCoroutine(MeleeNormalAttack(nearestEnemy));
+                    if ((attackDelayTime / attackSpeed) < (MeleeAttackTimer + AUTO_STOP / attackSpeed)) {
+                        MeleeNormalAttack(nearestEnemy, attackSpeed);
+                        MeleeAttackTimer = 0f;
+                    }
+                    
                 } else {
                     if (isAttacking) return;
                     Vector2 direction = (nearestEnemy.position - transform.position);
@@ -153,32 +164,42 @@ public class MeleeClassManager : MonoBehaviour
                     Vector2 newPosition = new Vector2(nearestEnemy.position.x, transform.position.y);
                     rb.MovePosition(Vector2.Lerp(transform.position, newPosition, Time.deltaTime * moveSpeed));                
                 }
-            } else {
-                // 1. enemySearchTime 시간이 지나면, waitPos[0] 위치로 서서히 이동한다.
-                searchWaitTime += Time.deltaTime;
-                if (searchWaitTime > enemySearchTime) {
-                    Vector2 direction = (waitPos[0].position - transform.position).normalized;
-                    direction.y = 0f;   
-                    Vector2 newPosition = new Vector2(transform.position.x + direction.x * moveSpeed * Time.deltaTime, transform.position.y);
-                    sr.flipX = direction.x < 0 ? true : false;
-                    hands[0].isLeft = sr.flipX;
-                    rb.MovePosition(newPosition);
-                    walkAndEnemySearch = true;
-                }
-            }
+            } 
+            // else {
+            //     // 1. enemySearchTime 시간이 지나면, waitPos[0] 위치로 서서히 이동한다.
+            //     searchWaitTime += Time.deltaTime;
+            //     if (searchWaitTime > enemySearchTime) {
+            //         Vector2 direction = (waitPos[0].position - transform.position).normalized;
+            //         direction.y = 0f;   
+            //         Vector2 newPosition = new Vector2(transform.position.x + direction.x * moveSpeed * Time.deltaTime, transform.position.y);
+            //         sr.flipX = direction.x < 0 ? true : false;
+            //         hands[0].isLeft = sr.flipX;
+            //         rb.MovePosition(newPosition);
+            //         walkAndEnemySearch = true;
+            //     }
+            // }
         } 
     }
 
-    IEnumerator MeleeNormalAttack(Transform enemy)
+    void MeleeNormalAttack(Transform enemy, float attackSpeed)
     {
         walkAndEnemySearch = true;
         searchWaitTime = 0f;
         isAttacking = true;
         Attack(enemy, attackSpeed);
-        yield return new WaitForSeconds(attackDelayTime);
-        StartCoroutine(AttackOff());
         isAttacking = false;
-    }    
+    }  
+
+    // IEnumerator MeleeNormalAttack(Transform enemy)
+    // {
+    //     walkAndEnemySearch = true;
+    //     searchWaitTime = 0f;
+    //     isAttacking = true;
+    //     Attack(enemy, attackSpeed);
+    //     yield return new WaitForSeconds(attackDelayTime);
+    //     StartCoroutine(AttackOff());
+    //     isAttacking = false;
+    // }    
 
     private Transform findNearestEnemy(bool isAttacking, int searchRangeSelect) {
         if (isAttacking) return null;
@@ -399,7 +420,7 @@ public class MeleeClassManager : MonoBehaviour
     {
         // perform the attack here
         // you can use attackDamage variable to set the amount of damage to inflict on the enemy
-        hands[0].meleeNormalAttackTriggerOn(attackSpped);
+        hands[0].meleeNormalAttackTriggerOn(enemy, attackSpped);
     }
 
     IEnumerator AttackOff() {
