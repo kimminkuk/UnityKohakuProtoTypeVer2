@@ -10,8 +10,15 @@ public class gameUIManager : MonoBehaviour
     public GameObject ShopCanvas;
     public GameObject gameUiCanvas;
 
+    public GameObject ShopTowerCallPopup;
+    public GameObject ShopWeaponCallPopup;
+
     [Header("# Game UI Control")]
     public bool isStart = false;
+
+    [Header("# Shop Control")]
+    public bool isTowerCall = false;
+    public bool isWeaponCall = false;
 
     private void Awake() {
         gameUiInstance = this;
@@ -31,5 +38,21 @@ public class gameUIManager : MonoBehaviour
 
     public void OpenGameUi() {
         gameUiCanvas.SetActive(true);
+    }
+    
+    public void OpenShopTowerCallPopup() {
+        ShopTowerCallPopup.SetActive(true);
+    }
+
+    public void CloseShopTowerCallPopup() {
+        ShopTowerCallPopup.SetActive(false);
+    }
+
+    public void OpenShopWeaponCallPopup() {
+        ShopWeaponCallPopup.SetActive(true);
+    }
+
+    public void CloseShopWeaponCallPopup() {
+        ShopWeaponCallPopup.SetActive(false);
     }
 }
