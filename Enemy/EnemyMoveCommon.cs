@@ -9,7 +9,7 @@ public class EnemyMoveCommon : MonoBehaviour
     public float speed ;
     public float jumpForce = 5f;
     public float gravity = 9.81f;
-    public float jumpHeight = 2f;
+    public float jumpHeight = 1f;
     public float jumpTime = 0.5f;
     public float jumpVelocity = 0f;
     public float jumpTimeCounter = 0f;
@@ -40,7 +40,8 @@ public class EnemyMoveCommon : MonoBehaviour
     /*
         Auto Movement Code
     */
-    public int isMoveLeft = 1;
+    protected int isMoveLeft = -1; //public으로 열어둬서, Inspector에서 값을 바꾼듯
+
     public bool ifFirstGround;
     public bool canMove; // Whether the character can currently move or not
     public bool isLeavingGround = false;
@@ -65,9 +66,18 @@ public class EnemyMoveCommon : MonoBehaviour
 
     /*
         Common Take Damage Code
-    */
+    */    
     public float flashDuration = 0.5f;
     public Color flashColor = new Color(1f, 0.7f, 0.7f, 0.7f);
+
+    /*
+    *    Slime
+    */    
+    protected float jumpDuration = 1f; //60 Frame
+    protected float jumpTimer = 0f;
+    protected int jumpCount = 0;
+    protected float moveXpos = 0f;
+    protected float oriYpos = 0f;
 
     private void Awake() {
         health = maxHealth;
@@ -83,7 +93,7 @@ public class EnemyMoveCommon : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    protected virtual void Update()
     {
 
         if (!isGrounded) {
@@ -94,10 +104,12 @@ public class EnemyMoveCommon : MonoBehaviour
         if (canMove && !isAttacked)
         {
             isMoving = true;
+
+            Debug.Log("isMoveLeft: " + isMoveLeft);
             Vector2 moveDirection = new Vector2(isMoveLeft, 0).normalized;
             sr.flipX = moveDirection.x > 0;
             rb.MovePosition(rb.position + moveDirection * speed * Time.fixedDeltaTime);
-
+            moveXpos = moveDirection.x * speed * Time.fixedDeltaTime;
             // Animation
             anim.SetBool("isWalking", true);
         }
@@ -110,9 +122,11 @@ public class EnemyMoveCommon : MonoBehaviour
             rb.MovePosition(rb.position);
             rb.velocity = Vector2.zero;
         }
+
+
     }
     // Update is called once per frame
-    private void FixedUpdate() {
+    protected virtual void FixedUpdate() {
         if (isGrounded || isMoving)
         {
             return;
@@ -121,10 +135,9 @@ public class EnemyMoveCommon : MonoBehaviour
         rb.velocity = dropForce;
     }
 
-    private void OnTriggerEnter2D(Collider2D other) {
+    protected virtual void OnTriggerEnter2D(Collider2D other) {
         if (other.gameObject.tag == "Ground") {
             canMove = true;
-            isMoveLeft *= -1;
             isGrounded = true;  
             isFalling = false;
             ifFirstGround = true;
@@ -134,12 +147,17 @@ public class EnemyMoveCommon : MonoBehaviour
             isGrounded = false;
             isLeavingGround = true;
             isMoving = false;
+            
+            GameManager.instance.LifeDelete();
             isMoveLeft *= -1;
+
+            // 초기 설정으로 돌리기
+            setDefault();
             gameObject.SetActive(false);
         }
     }
 
-    void OnTriggerExit2D(Collider2D other) {
+    protected virtual void OnTriggerExit2D(Collider2D other) {
         if (!ifFirstGround) {
             return;
         }
@@ -148,6 +166,8 @@ public class EnemyMoveCommon : MonoBehaviour
                 isGrounded = false;
                 isLeavingGround = true;
                 isMoving = false;
+                
+                isMoveLeft *= -1;                
             }
         }
     }
@@ -255,13 +275,19 @@ public class EnemyMoveCommon : MonoBehaviour
     }
 
     void Die() {
+        GameManager.instance.DefeatObject();
         //SomeTimes, Enemy Color is Flash(Red)
         sr.color = new Color(1f, 1f, 1f, 1f);
         setDefault();
-        gameObject.SetActive(false);
+        if (gameObject.activeInHierarchy) {
+            gameCoinUp();
+            gameObject.SetActive(false);
+        }
     }
 
     void setDefault() {
+        health = maxHealth;
+        mana = maxMana;        
         isGrounded = false;
         isJumping = false;
         isFalling = false;
@@ -272,8 +298,13 @@ public class EnemyMoveCommon : MonoBehaviour
         isIdle = false;
         isMoving = false;
         isAttacking = false;
-        isMoveLeft = 1;
+        isMoveLeft = -1;
         ifFirstGround = false;
         canMove = false;
+        jumpTimer = 0f;
+    }
+
+    void gameCoinUp() {
+        GameManager.instance.coinUp();
     }
 }

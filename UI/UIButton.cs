@@ -10,8 +10,8 @@ public class UIButton : MonoBehaviour
     public Image[] icons;
     //Image icon;
     Text textLevel;
-    private enum ImageType { StartStop = 0, Shop }
-    public enum ButtonType { StartStop, Shop }
+    private enum ImageType { StartStop = 0, Shop, Town }
+    public enum ButtonType { StartStop, Shop, Town }
  
 
     public ButtonType type;
@@ -28,7 +28,7 @@ public class UIButton : MonoBehaviour
     private void Start() {
         switch (type) {
             case ButtonType.StartStop:
-                spriteName = "Start";
+                spriteName = "Stop";
                 Sprite loadedSprite = Resources.Load<Sprite>(folderPath + "/" + spriteName);
                 icons[(int)ImageType.StartStop] = GetComponent<Image>(); // Get the Image component
                 icons[(int)ImageType.StartStop].sprite = loadedSprite;
@@ -41,7 +41,10 @@ public class UIButton : MonoBehaviour
         //ButtonType Switch-Case
         switch (type) {
             case ButtonType.StartStop:
-                gameUIManager.gameUiInstance.isStart = !gameUIManager.gameUiInstance.isStart;
+                //isStart: true -> Game Stop!
+                //isStart: false -> Game Doing!
+                gameUIManager.gameUiInstance.isStart = !gameUIManager.gameUiInstance.isStart; 
+                GameManager.instance.FloorPosOnOff(gameUIManager.gameUiInstance.isStart);
                 gameStartStopControl(gameUIManager.gameUiInstance.isStart);
                 break;
             case ButtonType.Shop:
@@ -49,8 +52,17 @@ public class UIButton : MonoBehaviour
                 gameUIManager.gameUiInstance.isStart = true;
                 Time.timeScale = 0f; // Pause the game
                 gameStartStopControl(true);
+                GameManager.instance.FloorPosOnOff(gameUIManager.gameUiInstance.isStart);
                 gameUIManager.gameUiInstance.CloseGameUi();
                 gameUIManager.gameUiInstance.OpenShop();
+                break;
+            case ButtonType.Town:
+                // CharacterScene을 호출합니다.
+                gameUIManager.gameUiInstance.isStart = true;
+                Time.timeScale = 0f; // Pause the game
+                gameStartStopControl(true);
+                GameManager.instance.FloorPosOnOff(gameUIManager.gameUiInstance.isStart);
+                SceneManager.LoadScene("CharacterScene");
                 break;
         }
     }

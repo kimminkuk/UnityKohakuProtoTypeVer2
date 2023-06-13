@@ -14,14 +14,18 @@ public class HUD : MonoBehaviour
         myText = GetComponent<Text>();
         mySlider = GetComponent<Slider>();
     }
-
+    //Stage001 -> 시작시 Lv.0 으로 변경
+    // 스테이지 끝나면 에러발생
     private void LateUpdate()
     {
         switch (type)
         {
             case InfoType.Level:
                 // 현재 게임 스테이지 표시 (거의 무한으로 갈거임... 10정도만 설계하고 나중에 더 추가할 예정)
-                myText.text = string.Format("Lv.{0:F0}", GameManager.instance.gameLevel);
+
+                //001, 002 string.Format
+                //1을 001로 표현해주는 string.Format
+                myText.text = string.Format("STAGE {0:000}", GameManager.instance.gameLevel);
                 break;
             case InfoType.Kill:
                 // 잡은 적 표시 
@@ -33,7 +37,7 @@ public class HUD : MonoBehaviour
                 break;
             case InfoType.Health:
                 // 성채 체력 (보석 같은거로 표시할 예정)
-
+                
                 break;
         }
     }

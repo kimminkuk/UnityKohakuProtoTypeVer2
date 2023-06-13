@@ -34,6 +34,7 @@ public class UIShop : MonoBehaviour
     public void OkCallTowerPopup() {
         // 소환 모션
         Debug.Log("OkCallTowerPopup");
+        GameManager.instance.CallTower();
         CloseCallTowerPopup();
     }
 
