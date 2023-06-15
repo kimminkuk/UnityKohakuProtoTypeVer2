@@ -131,8 +131,13 @@ public class GameManager : MonoBehaviour
 
     }
 
+    // Call Tower
+    // melee, range
+    // 0: Hammer
+    // 1: Sword
+    // 2: Staff
     private void makeTowerObject() {
-        int getClassChangeIndex = 1;
+        int getClassChangeIndex = Random.Range(0, poolCharcter.pools.Length);
         int meleeCount = 2;
         int floorSelect = 0;
         if (getClassChangeIndex >= meleeCount) {
@@ -198,9 +203,9 @@ public class GameManager : MonoBehaviour
     private void StageSpawnEnemy(int stage, int enemyCount) {
         float xOffset = 0.3f;
         for (int count = 0; count < enemyCount; count++) {
-            //GameObject obj = poolEnemy.GetEnemyObject(stage);
+            GameObject obj = poolEnemy.GetEnemyObject(stage);
 
-            GameObject obj = poolEnemy.GetEnemyObject(10);
+            //GameObject obj = poolEnemy.GetEnemyObject(10);
 
             int getRespawnPosIndex = Random.Range(0, respawnPosObjectList.Count);
             //obj.transform.position = respawnPosObjectList[getRespawnPosIndex].transform.position;

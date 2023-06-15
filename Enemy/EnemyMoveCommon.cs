@@ -163,11 +163,12 @@ public class EnemyMoveCommon : MonoBehaviour
         }
         if (other.gameObject.tag == "GroundEdge") {
             {
+                if (isGrounded) isMoveLeft *= -1;
                 isGrounded = false;
                 isLeavingGround = true;
                 isMoving = false;
                 
-                isMoveLeft *= -1;                
+                Debug.Log("GroundEdge Exit, isMoveLeft: " + isMoveLeft);
             }
         }
     }
@@ -260,6 +261,7 @@ public class EnemyMoveCommon : MonoBehaviour
 
     public void TakeDamage(int damage, Vector2 knockbackDirection, float knockbackTime)
     {
+        Debug.Log("TakeDamage Called");
         health -= damage;
 
         // Apply knockback force

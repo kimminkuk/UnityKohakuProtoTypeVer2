@@ -25,7 +25,7 @@ public class HUD : MonoBehaviour
 
                 //001, 002 string.Format
                 //1을 001로 표현해주는 string.Format
-                myText.text = string.Format("STAGE {0:000}", GameManager.instance.gameLevel);
+                //myText.text = string.Format("STAGE {0:000}", GameManager.instance.gameLevel);
                 break;
             case InfoType.Kill:
                 // 잡은 적 표시 

@@ -74,7 +74,7 @@ public class Bullet : MonoBehaviour
         //rigid.AddForce(dir * 10, ForceMode2D.Impulse);
         if (per > -1)
         {
-            rigid.velocity = dir * 15f;
+            rigid.velocity = dir * 15f * 2; // 15f is speed
         }
     }    
 
@@ -86,9 +86,20 @@ public class Bullet : MonoBehaviour
             gameObject.SetActive(false);
         }
 
-        if (collision.CompareTag("Ground")) {
+        // Enter에 넣으니, Enemy 판정과 뭔가 애매해진다.
+        // if (collision.CompareTag("Ground")) {
+        //     gameObject.SetActive(false);
+        // }
+
+        if (collision.CompareTag("GroundSecond")) {
             gameObject.SetActive(false);
         }
+    }
+
+    private void OnTriggerExit2D(Collider2D collision) {
+        // if (collision.CompareTag("Ground")) {
+        //     gameObject.SetActive(false);
+        // }
     }
 
     void Fire()
