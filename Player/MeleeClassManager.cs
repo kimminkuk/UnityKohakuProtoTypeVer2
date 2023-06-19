@@ -449,5 +449,12 @@ public class MeleeClassManager : MonoBehaviour
         isMoveLeft = 1;
         ifFirstGround = false;
         canMove = false;
-    }     
+    }
+
+    // Melee Character Weapon Clear 추가해야합니다.
+    
+    public void WinPose() {
+        Debug.Log("MeleeClassManager WinPose Call()");
+        hands[0].ClearPose();
+    }
 }

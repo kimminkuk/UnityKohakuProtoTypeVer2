@@ -17,7 +17,7 @@ public class GameManager : MonoBehaviour
     public PoolManager pool;
     public PoolCharcterManager poolCharcter;
     public PoolEnemyManager poolEnemy;
-    public Player player;
+    public PoolRangeTower poolRangeTower;
     public ItemManager itemPool;
 
     public float makeIntervalEnemyTime = 0.5f;
@@ -137,17 +137,24 @@ public class GameManager : MonoBehaviour
     // 1: Sword
     // 2: Staff
     private void makeTowerObject() {
-        int getClassChangeIndex = Random.Range(0, poolCharcter.pools.Length);
-        int meleeCount = 2;
+        GameObject obj = null;
+        int getMeleeTowerIndex = poolCharcter.pools.Length; //2
+        int getRangeTowerIndex = poolRangeTower.pools.Length; //1
+
+        int getClassChangeIndex = Random.Range(0, getMeleeTowerIndex + getRangeTowerIndex); //3 -> 0,1,2
+        int meleeCount = getMeleeTowerIndex; //2
         int floorSelect = 0;
+
+        //meleeCount가 getMeleeTowerIndex보다 크거나 같으면, Range Tower를 생성합니다.
         if (getClassChangeIndex >= meleeCount) {
-            floorSelect = 1;
+            obj = poolRangeTower.GetRangeTowerObject(getClassChangeIndex - meleeCount);
         }
-        GameObject obj = poolCharcter.GetObject(getClassChangeIndex);
+        else {
+            obj = poolCharcter.GetObject(getClassChangeIndex);
+        }
+
         obj.transform.position = defaultRespawnPos.transform.position;
         //obj.transform.position = floortPosObjectList[floorSelect].transform.position;
-
-        
     }
 
     public void coinUp() {
@@ -233,21 +240,40 @@ public class GameManager : MonoBehaviour
             Debug.Log("Game Clear");    
         } else {
 
-            //1. Stage Clear UI
-            WinMotion();
-
-            //2. Game Stop
-
-
-            gameStage++;
-            StartStage(gameStage);
+            //1. Stage Clear UI and Game Stop
+            StartCoroutine(WinMotion());
+            
         }
     }    
     // 5. 1~4 반복
-
-    public void WinMotion() {
-
+    IEnumerator WinMotion() {
+        Debug.Log("WinMotion Call");
+        poolRangeTower.PoolRangeTowerWinPose();
+        poolCharcter.PoolCharacterWinPose();
+        pool.ClearPools();
+        float waitTime = 3f;
+        float elapsedTime = 0f;
+        while (elapsedTime < waitTime)
+        {
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        Debug.Log("2. Game Stop");
+        //2. Game Stop
+        gameStage++;
+        StartStage(gameStage);        
     }
+    // public void WinMotion() {
+    //     // RangeCharacter의 ClearPose 호출
+    //     // 시간을 멈추는 코드를 작성했는데.. 조금 별로네?
+
+    //     // 1. Win Pose Call
+    //     // 2. Game Stop
+
+    //     // 실제론, Game Stop -> Win Pose..
+    //     Debug.Log("WinMotion Call");
+    //     poolRangeTower.PoolRangeTowerWinPose();
+    // }
 
     public void LifeDelete() {
         lifeObject[curLife - 1].SetActive(false);

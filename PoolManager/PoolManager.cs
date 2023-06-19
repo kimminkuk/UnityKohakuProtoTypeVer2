@@ -79,4 +79,12 @@ public class PoolManager : MonoBehaviour
         }
         return select;
     }    
+
+    public void ClearPools() {
+        for (int i = 0; i < pools.Length; i++) {
+            foreach(GameObject obj in pools[i]) {
+                obj.SetActive(false);
+            }
+        }
+    }
 }

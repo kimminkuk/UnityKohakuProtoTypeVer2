@@ -153,6 +153,7 @@ public class RangeClassManager : MonoBehaviour
     //     이게 훨씬 깔끔하네 오호..
     //4. Enemy가 공격 당하는지 확인
     //4-1. 처음 스테이지1 일 때는 왜 공격을 안 당하지????????? 처음에 그냥 꽤나 지나치네 -> Trigger가 너무 작아서 그런거였음, 이제는 괜찮음
+
     //4-2. Enemy 전부 처리하고, GameStop을 해버리니깐 공격 모션등등 하다가 갑자기 멈춤, 이건 초기화 개념으로 가야하는데.. 어떻게하지? Initial동작들을 설정해야하나?
     //     Idle동작을 실행 시키고, 실행되고 있는 Active들을 제거하자 (PoolItem 제거)
     //5. 공격 속도, 스킬 확인 (로딩 이미지까지 추가해보자ㅊ)
@@ -484,5 +485,20 @@ public class RangeClassManager : MonoBehaviour
         isMoveLeft = 1;
         ifFirstGround = false;
         canMove = false;
+    }
+
+    //Win Pose
+    public void WinPose() {
+        anim.SetTrigger("Win");
+    }
+    //Lose Pose
+    public void LosePose() {
+        anim.SetTrigger("Lose");
+    }
+
+    //Clear Pose
+    public void ClearPose() {
+        anim.SetTrigger("Clear");
+        hands[0].ClearPose();
     }    
 }

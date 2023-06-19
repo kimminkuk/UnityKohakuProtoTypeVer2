@@ -10,10 +10,9 @@ public class Weapon : MonoBehaviour
     public int count;
     public float speed;
     float timer;
-    Player player;
 
     private void Awake() {
-        player = GameManager.instance.player;
+        
     }
 
     // Start is called before the first frame update

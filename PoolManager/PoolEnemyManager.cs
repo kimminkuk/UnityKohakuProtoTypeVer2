@@ -31,5 +31,4 @@ public class PoolEnemyManager : MonoBehaviour
         enemyPools[prefabId].Add(enemyObj);
         return enemyObj;
     }
-    
 }

@@ -101,22 +101,6 @@ public class Bullet : MonoBehaviour
         //     gameObject.SetActive(false);
         // }
     }
-
-    void Fire()
-    {
-        //플레이가 바라보는 방향으로 발사
-        Vector3 dir = GameManager.instance.player.transform.position - transform.position;
-        
-        dir = dir.normalized;
-
-        Transform bullet = GameManager.instance.pool.GetObject(0).transform;
-        bullet.position = transform.position;
-        bullet.rotation = Quaternion.FromToRotation(Vector3.up, dir);
-        Init(1, 1, dir); // -1 is Infinity Per.
-
-        //i want bullet setActive false after 3 seconds
-        StartCoroutine(DeactivateBullet(bullet.gameObject, 3f));
-    }
     IEnumerator DeactivateBullet(GameObject bulletObject, float time)
     {
         yield return new WaitForSeconds(time);

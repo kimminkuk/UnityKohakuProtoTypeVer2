@@ -320,5 +320,17 @@ public class Hand : MonoBehaviour
         hasTouched = false;
     }
 
-    // 무기를 flip 할 때는, OnTrigger 빼버리기 (공격 안하게)
+    //Win Pose
+    public void WinPose() {
+        weaponAnim.SetTrigger("Win");
+    }
+    //Lose Pose
+    public void LosePose() {
+        weaponAnim.SetTrigger("Lose");
+    }
+
+    // Clear Pose
+    public void ClearPose() {
+        weaponAnim.SetTrigger("Clear");
+    }
 }
