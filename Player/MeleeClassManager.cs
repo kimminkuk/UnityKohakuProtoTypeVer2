@@ -451,8 +451,26 @@ public class MeleeClassManager : MonoBehaviour
         canMove = false;
     }
 
-    // Melee Character Weapon Clear 추가해야합니다.
     
+    // 대략적인 Win Pose ok
+    // 1. Score DB를 먼저 할까..? 
+    //    로그인 화면부터 만들어야겟네
+    //    1. 로그인 화면
+    //    2. ID/PW 입력 or 가입
+    //    3. FireBase에 저장
+    //    4. 로그인 성공하면, ID가 가지고 있는 DB 정보들 가져와서 화면에 뿌려주기
+    //       4-1. 돈, 스테이지, Tower 정보,
+    //    후보, Redis와 Firebase
+    //    일단 둘 다 뚫는걸로 합시다.
+
+    // 2. 장비칸 만들기를 먼저 할까?
+    //    아이템 간단하게 만들어서 장비에 넣고,
+    //    외형 달라지기
+    //    공속, 데미지 달라지기
+    //    장비칸 누를 때, 샘플 다 초기화 되면 안되는거 확인하기..
+    //    스테이지 전에 하니깐, 게임스탑 눌러놓고 만드는거니깐 상관없나?
+    //    현재 데이터들을 기록해두는게 중요하다.
+
     public void WinPose() {
         Debug.Log("MeleeClassManager WinPose Call()");
         hands[0].ClearPose();

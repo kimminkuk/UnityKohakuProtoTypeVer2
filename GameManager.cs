@@ -1,11 +1,18 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
+
+    [SerializeField]
+    private PlayerData _playerData;
+    public PlayerData PlayerData => _playerData;
+    public UnityEvent OnPlayerUpdated = new UnityEvent();
 
     [Header("# Game Control")]
     public float gameTime;
@@ -34,12 +41,25 @@ public class GameManager : MonoBehaviour
     public GameObject defaultRespawnPos;
     
     /*
+    *    PlayerData
+    */
+    public int coin => _playerData.Coin;
+    public int tempCoinValue;
+    public int gameLevel => _playerData.GameLevel;
+    public string playerName => _playerData.Name;
+
+    /*
+    *    Firebase Realtime Database
+    */
+    public GameObject firebaseRTDM;
+
+
+    /*
     *    UI
     */
-    public int gameLevel;
     public int kill;
-    public int coin;
     public GameObject coinText;
+    public GameObject userIdText;
     public Image[] icons;
     private string folderPath = "Sprites/UI";
     private string spriteName;    
@@ -73,12 +93,28 @@ public class GameManager : MonoBehaviour
     public UIButton uiButton; 
     private void Awake() 
     {
-        instance = this;
-        coin = 0;        
+        instance = this;        
     }
 
     void Start()
     {
+        coinText.GetComponent<UnityEngine.UI.Text>().text = coin.ToString();
+        userIdText.GetComponent<UnityEngine.UI.Text>().text = _playerData.Name;
+        Debug.Log("_playerData.Name: " + _playerData.Name);
+        tempCoinValue = coin;
+        gameStage = gameLevel;
+        var playerSaveManager = firebaseRTDM.GetComponent<PlayerSaveManager>();
+        if (playerSaveManager != null) {
+            _playerData = new PlayerData {
+                Name = "temp1",
+                Coin = 10,
+                GameLevel = 1
+            };
+            playerSaveManager.SavePlayer(_playerData);
+        } else {
+            Debug.LogError("PlayerSaveManager is null");
+        }
+
         StartGame();
     }
 
@@ -118,6 +154,21 @@ public class GameManager : MonoBehaviour
         }  
     }
 
+    public void UpdatePlayer(PlayerData playerData)
+    {
+        Debug.Log("UpdatePlayer() Call");
+        if (!playerData.Equals(_playerData)) {
+            _playerData = playerData;
+            Debug.Log("_playerData.Name: " + _playerData.Name);
+            OnPlayerUpdated.Invoke();
+        }
+    }
+
+    private void UpdateInfo() {
+        _playerData.Coin = tempCoinValue;
+        _playerData.GameLevel = gameStage;
+    }
+
     // Level System 와꾸좀 잡아보자
     // 1. Lv UI 추가
     // 2. 돈 UI 추가
@@ -141,7 +192,7 @@ public class GameManager : MonoBehaviour
         int getMeleeTowerIndex = poolCharcter.pools.Length; //2
         int getRangeTowerIndex = poolRangeTower.pools.Length; //1
 
-        int getClassChangeIndex = Random.Range(0, getMeleeTowerIndex + getRangeTowerIndex); //3 -> 0,1,2
+        int getClassChangeIndex = UnityEngine.Random.Range(0, getMeleeTowerIndex + getRangeTowerIndex); //3 -> 0,1,2
         int meleeCount = getMeleeTowerIndex; //2
         int floorSelect = 0;
 
@@ -158,8 +209,11 @@ public class GameManager : MonoBehaviour
     }
 
     public void coinUp() {
-        coin++;
-        coinText.GetComponent<UnityEngine.UI.Text>().text = coin.ToString();
+        //coin++;
+        //coinText.GetComponent<UnityEngine.UI.Text>().text = coin.ToString();
+        tempCoinValue++; // coin은 PlayerData와 연동되어 있습니다?
+        coinText.GetComponent<UnityEngine.UI.Text>().text = tempCoinValue.ToString();
+        
         
         //coinText.text = coin.ToString();
         //coinImage의 text를 coin으로 바꿔줍니다.
@@ -195,7 +249,7 @@ public class GameManager : MonoBehaviour
     // 음.. 뭔가 업데이트로 하면 아까움..
     // 1. GameStart
     public void StartGame() {
-        gameStage = 0;
+        //gameStage = 0;
         StartStage(gameStage);
     }
     public void StartStage(int stage) {
@@ -214,7 +268,7 @@ public class GameManager : MonoBehaviour
 
             //GameObject obj = poolEnemy.GetEnemyObject(10);
 
-            int getRespawnPosIndex = Random.Range(0, respawnPosObjectList.Count);
+            int getRespawnPosIndex = UnityEngine.Random.Range(0, respawnPosObjectList.Count);
             //obj.transform.position = respawnPosObjectList[getRespawnPosIndex].transform.position;
             
             //obj.transform.position의 x좌표에 xOffset을 추가하고 싶습니다.
@@ -237,8 +291,14 @@ public class GameManager : MonoBehaviour
         Debug.Log("StageClear");
         if (gameStage > MAX_STATG) {
             // Game Clear
-            Debug.Log("Game Clear");    
+            Debug.Log("Game Clear");
         } else {
+
+            // Update Info
+            UpdateInfo();
+
+            // SAVE DB-DATA
+            UpdatePlayer(_playerData);
 
             //1. Stage Clear UI and Game Stop
             StartCoroutine(WinMotion());
@@ -249,7 +309,7 @@ public class GameManager : MonoBehaviour
     IEnumerator WinMotion() {
         Debug.Log("WinMotion Call");
         poolRangeTower.PoolRangeTowerWinPose();
-        poolCharcter.PoolCharacterWinPose();
+        poolCharcter.MeleePoolsTowerWinPoseCall();
         pool.ClearPools();
         float waitTime = 3f;
         float elapsedTime = 0f;
