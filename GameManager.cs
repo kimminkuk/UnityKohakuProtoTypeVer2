@@ -10,8 +10,10 @@ public class GameManager : MonoBehaviour
     public static GameManager instance;
 
     [SerializeField]
-    private PlayerData _playerData;
-    public PlayerData PlayerData => _playerData;
+    private PlayerDataVer2 _playerDataVer2;
+    public PlayerDataVer2 playerDataVer2 => _playerDataVer2;
+
+    //public PlayerData PlayerData => FindObjectOfType<FirebaseAuthManager>().PlayerData;
     public UnityEvent OnPlayerUpdated = new UnityEvent();
 
     [Header("# Game Control")]
@@ -43,15 +45,16 @@ public class GameManager : MonoBehaviour
     /*
     *    PlayerData
     */
-    public int coin => _playerData.Coin;
+    public int coin;
     public int tempCoinValue;
-    public int gameLevel => _playerData.GameLevel;
-    public string playerName => _playerData.Name;
+    public int gameLevel;
+    public string playerName;
 
     /*
     *    Firebase Realtime Database
     */
     public GameObject firebaseRTDM;
+    public PlayerSaveManager playerSaveManager;
 
 
     /*
@@ -96,46 +99,63 @@ public class GameManager : MonoBehaviour
         instance = this;        
     }
 
-    void Start()
+    async void Start()
     {
-        coinText.GetComponent<UnityEngine.UI.Text>().text = coin.ToString();
-        userIdText.GetComponent<UnityEngine.UI.Text>().text = _playerData.Name;
-        Debug.Log("_playerData.Name: " + _playerData.Name);
-        tempCoinValue = coin;
-        gameStage = gameLevel;
-        var playerSaveManager = firebaseRTDM.GetComponent<PlayerSaveManager>();
-        if (playerSaveManager != null) {
-            _playerData = new PlayerData {
-                Name = "temp1",
-                Coin = 10,
-                GameLevel = 1
-            };
-            playerSaveManager.SavePlayer(_playerData);
+        // 1. 아이디 바꿔서 테스트 해보기
+        //    1-1. userId를 그 뭐냐, Firebase에서 제공해주는 userId의 hash 값을 받아서 넘겨주면 계속 저장가능한거 아닌가??
+        //    1-2. 역으로... 그 hash값으로 내가 판단할 수 있나???
+        //    1-3. 설정이 가능하다면 그냥 숫자로 바꾸고 싶은데.. 0, 1, 2...999999 이런식으로
+        //    1-4. 아..DontDestroyOnLoad를 사용해서, FirebaseAuthManager를 살린다?
+        //    1-5. FirebaseAuthManager에서 PlayerData new로 생성 후, 
+        //         파괴 불가 설정 하고, GameManager Start findObjectOfTpye으로 찾는다.
+        // 2. CoinUp이 UpdatePlayer 이후로 호출되는 이유 찾기
+        //    2-1. Enemy가 죽고, CoinUp 됩니다.
+        //         그러나, Enemy가 죽으면 StageClear가 호출됩니다.
+        //         이 순서가 지금 StageClear() -> CoinUp() 입니다.
+        //         내가 원하는건 CoinUp() -> StageClear() 입니다.
+        //         음.. 이건 어떻게 해야할까요?
+        //         그냥 Enemy Die할 때, GameManager의 _PlayerData.Coin++해줌
+        // 3. PlayerData의 아이디는 원래 나중에 설정해도 되는건가?
+        //    3-1. ID Ui 입력
+        // 4. Load해보기
+        //    4-1. ID, COIN, LEVEL 저장해두고있어야합니다.
+        //    4-2. FirebaseAuthManager에서 만들어둔거랑.. FirebaseRTDM에서 가져온 데이터를 비교해서
+        //         덮어써줄때 다르게 해줄까?
+        //    4-3. RTDM에서 가져오려면 처음에 아이디가 없을 때는 만들어줘야합니다..
+        //    4-4. 아하, 그럼 Login 화면에서 아이디 생성 시, RTDM에 저장해주고,
+        //         GameManager에서는 LoadPlayerVer2를 호출해서 데이터에 넣어주면 될듯요
+        // 5. RTBM에 저장하기전에 자동으로 PLAYER_KEY_VER3를 생성해서 저장하는 방법이 없을까...?
+        //    5-1. firebase의 RTBM개수를 보고, 읽어와서 저장..?
+        //    5-2. 이거까지는 일단 생각하지말자 넘 복잡하다, 그리고 설계 단계를 배우고와야할듯
+        //    5-3. 의도하지 않은 동작 하고 있습니다. (push를 child로 변경해서 해결)
+        //    
+        // 6. firebasId를 이용해서 Load 후, UI에 적용하기
+        _playerDataVer2 = FindObjectOfType<FirebaseAuthManager>().PlayerDataVer2;
+        // tempCoinValue = coin;
+        // gameStage = gameLevel;
+        playerSaveManager = firebaseRTDM.GetComponent<PlayerSaveManager>();
+        
+        userIdText.GetComponent<UnityEngine.UI.Text>().text = _playerDataVer2.FirebaseId;
+        PlayerDataVer2? LoadPlayerDataVer2 = await playerSaveManager.GetPlayerDataNullCheck(_playerDataVer2.FirebaseId);
+        if (LoadPlayerDataVer2 != null) {
+            Debug.Log("LoadPlayerDataVer2: " + LoadPlayerDataVer2);
+            Debug.Log("LoadPlayerDataVer2.Value: " + LoadPlayerDataVer2.Value);
+            
+            coinText.GetComponent<UnityEngine.UI.Text>().text = LoadPlayerDataVer2.Value.Coin.ToString();
+            gameStage = LoadPlayerDataVer2.Value.GameLevel;
         } else {
-            Debug.LogError("PlayerSaveManager is null");
+            Debug.Log("LoadPlayerDataVer2 is null");
         }
-
         StartGame();
     }
 
     // Update is called once per frame
     void Update()
     {
-
-        // makeEnemyTimer -= Time.deltaTime;
-        // if (makeEnemyTimer <= 0f) {
-        //     makeEnemyTimer = makeIntervalEnemyTime;
-        //     GameObject obj = poolEnemy.GetEnemyObject(gameStage);
-        //     int getRespawnPosIndex = Random.Range(0, respawnPosObjectList.Count);
-        //     obj.transform.position = respawnPosObjectList[getRespawnPosIndex].transform.position;
-            
-        // }
-    
         //UI에서 버튼 클릭 시, Magician 케릭터를 FloorPos-1 위치에 생성
         //만약에 케릭터가 3개 이상이면, FloorPos-2에 생성
         //FloorPos-2에 케릭터가 3개 이상이면, FloorPos-3에 생성
         // a버튼을 누르면 나오게 만듭니다.
-        
         //if (Input.GetKeyDown(KeyCode.Space))
         if (Input.GetKeyDown(KeyCode.A))
         {
@@ -154,19 +174,23 @@ public class GameManager : MonoBehaviour
         }  
     }
 
-    public void UpdatePlayer(PlayerData playerData)
+    public void UpdatePlayer(PlayerDataVer2 playerData)
     {
         Debug.Log("UpdatePlayer() Call");
-        if (!playerData.Equals(_playerData)) {
-            _playerData = playerData;
-            Debug.Log("_playerData.Name: " + _playerData.Name);
+        if (!playerData.Equals(_playerDataVer2)) {
+            _playerDataVer2 = playerData;
+            Debug.Log("_playerDataVer2.Name: " + _playerDataVer2.Name);
             OnPlayerUpdated.Invoke();
         }
     }
 
     private void UpdateInfo() {
-        _playerData.Coin = tempCoinValue;
-        _playerData.GameLevel = gameStage;
+        Debug.Log("UpdateInfo() Call");
+        gameStage++;
+        _playerDataVer2.GameLevel = gameStage;
+        Debug.Log("_playerDataVer2.Coin: " + _playerDataVer2.Coin + ", gameStage: " + gameStage);        
+        playerSaveManager.SavePlayerVer2(_playerDataVer2);
+        playerSaveManager.SavePlayerChild(_playerDataVer2);
     }
 
     // Level System 와꾸좀 잡아보자
@@ -205,19 +229,10 @@ public class GameManager : MonoBehaviour
         }
 
         obj.transform.position = defaultRespawnPos.transform.position;
-        //obj.transform.position = floortPosObjectList[floorSelect].transform.position;
     }
 
     public void coinUp() {
-        //coin++;
-        //coinText.GetComponent<UnityEngine.UI.Text>().text = coin.ToString();
-        tempCoinValue++; // coin은 PlayerData와 연동되어 있습니다?
-        coinText.GetComponent<UnityEngine.UI.Text>().text = tempCoinValue.ToString();
-        
-        
-        //coinText.text = coin.ToString();
-        //coinImage의 text를 coin으로 바꿔줍니다.
-        
+        coinText.GetComponent<UnityEngine.UI.Text>().text = _playerDataVer2.Coin.ToString();
     }
     
     public void FloorPosOnOff(bool isOn) {
@@ -280,12 +295,17 @@ public class GameManager : MonoBehaviour
     // 3. Stage의 모든 Object Kill or Object Exit Trigger Call
     //    EnemyMovement에서 호출,
     //    gameOver아니면, StartStage 호출
-    public void DefeatObject() {
+    public void DefeatObject(bool isDie) {
+        if (isDie) {
+            _playerDataVer2.Coin += 1;
+            coinUp();
+        }
         clearEnemyCount++;
         if (clearEnemyCount >= enemyCount[gameStage]) {
             StageClear();
         }
     }
+    
     // 4. StageClear
     public void StageClear() {
         Debug.Log("StageClear");
@@ -293,12 +313,11 @@ public class GameManager : MonoBehaviour
             // Game Clear
             Debug.Log("Game Clear");
         } else {
-
             // Update Info
             UpdateInfo();
 
             // SAVE DB-DATA
-            UpdatePlayer(_playerData);
+            //UpdatePlayer(_playerDataVer2);
 
             //1. Stage Clear UI and Game Stop
             StartCoroutine(WinMotion());
@@ -320,20 +339,8 @@ public class GameManager : MonoBehaviour
         }
         Debug.Log("2. Game Stop");
         //2. Game Stop
-        gameStage++;
         StartStage(gameStage);        
     }
-    // public void WinMotion() {
-    //     // RangeCharacter의 ClearPose 호출
-    //     // 시간을 멈추는 코드를 작성했는데.. 조금 별로네?
-
-    //     // 1. Win Pose Call
-    //     // 2. Game Stop
-
-    //     // 실제론, Game Stop -> Win Pose..
-    //     Debug.Log("WinMotion Call");
-    //     poolRangeTower.PoolRangeTowerWinPose();
-    // }
 
     public void LifeDelete() {
         lifeObject[curLife - 1].SetActive(false);
@@ -341,7 +348,7 @@ public class GameManager : MonoBehaviour
         if (curLife <= 0) {
             GameOver();
         } else {
-            DefeatObject();
+            DefeatObject(false);
         }
     }
 

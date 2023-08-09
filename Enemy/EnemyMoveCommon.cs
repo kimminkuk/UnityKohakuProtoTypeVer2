@@ -65,6 +65,12 @@ public class EnemyMoveCommon : MonoBehaviour
     // private string folderAnimPath = "Animation/Enemy";
 
     /*
+    *    Player Data
+    */
+    [SerializeField]
+    private PlayerData _playerData;
+
+    /*
         Common Take Damage Code
     */    
     public float flashDuration = 0.5f;
@@ -90,6 +96,7 @@ public class EnemyMoveCommon : MonoBehaviour
     void Start()
     {   
         sr.color = new Color (1f, 1f, 1f, 1f);
+        //_playerData = FindObjectOfType<FirebaseAuthManager>().PlayerData;
     }
 
     // Update is called once per frame
@@ -277,12 +284,12 @@ public class EnemyMoveCommon : MonoBehaviour
     }
 
     void Die() {
-        GameManager.instance.DefeatObject();
+        GameManager.instance.DefeatObject(true);
         //SomeTimes, Enemy Color is Flash(Red)
         sr.color = new Color(1f, 1f, 1f, 1f);
         setDefault();
         if (gameObject.activeInHierarchy) {
-            gameCoinUp();
+            //gameCoinUp();
             gameObject.SetActive(false);
         }
     }
@@ -307,6 +314,9 @@ public class EnemyMoveCommon : MonoBehaviour
     }
 
     void gameCoinUp() {
-        GameManager.instance.coinUp();
+        //Debug.Log("gameCoinUp Call");
+        //_playerData.Coin += 1;
+        //Debug.Log("_playerData.Coin: " + _playerData.Coin + ", _playerData.Name: " + _playerData.Name + ", _playerData.GameLevel: " + _playerData.GameLevel);
+        //GameManager.instance.coinUp();
     }
 }

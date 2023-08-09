@@ -37,8 +37,7 @@ public class LoginPageManager : MonoBehaviour
 
     public void SetUserId(string userId)
     {
-        _playerData.Name = userId;
-        Debug.Log("SetUserId: " + _playerData.Name);
+        Debug.Log("SetUserId: " + userId);
     }
 
     public void CloseLoginFailPanel()

@@ -10,7 +10,11 @@ using Firebase.Extensions;
 public class FirebaseAuthManager : MonoBehaviour
 {
     [SerializeField]
-    private PlayerData _playerData;
+    // private PlayerData _playerData;
+    // public PlayerData PlayerData => _playerData;
+    private PlayerDataVer2 _playerDataVer2;
+    public PlayerDataVer2 PlayerDataVer2 => _playerDataVer2;
+
     private FirebaseAuth auth;
     private FirebaseUser user; 
     
@@ -27,8 +31,17 @@ public class FirebaseAuthManager : MonoBehaviour
     public GameObject loginOkPanel;
     public GameObject loginFailPanel;
 
+    /*
+    *    Firebase Realtime Database
+    */
+    public GameObject firebaseRTDM;
+    public PlayerSaveManager playerSaveManager;
+    private string _userName;
+
     void Start() {
+        playerSaveManager = firebaseRTDM.GetComponent<PlayerSaveManager>();
         auth = FirebaseAuth.DefaultInstance;
+        DontDestroyOnLoad(gameObject);
     }  
     //1. Login 이후 -> SampleScene으로 이동
     //2. 1번 Login이 가지고 있는 DB정보들 가지고 옵니다.
@@ -93,6 +106,11 @@ public class FirebaseAuthManager : MonoBehaviour
         return ERR_PASS;
     }
     
+    private string GetNameFromEmail(string email) {
+        string[] emailSplit = email.Split('@');
+        return emailSplit[0];
+    }
+
     private void myErrorMessage(int errorNumber) {
         string _init = "Error: ";
         string _message = "";
@@ -110,6 +128,21 @@ public class FirebaseAuthManager : MonoBehaviour
         Debug.Log(_init + _message);
     }
 
+    public async void UpdateToRtbmPlayer(PlayerDataVer2 playerData)
+    {
+        Debug.Log("UpdateToRtbmPlayer() Call");
+        // 1. 만약에 SaveExistsVer3가 존재하면, 저장하지 않습니다.
+        // 2. 만약에 SaveExistsVer3가 존재하지 않으면, 저장합니다.
+        if (await playerSaveManager.SaveExistsVer3()) {
+            Debug.Log("SaveExistsVer3() is true");
+            return;
+        }
+        else {
+            Debug.Log("SaveExistsVer3() is false");
+            playerSaveManager.SavePlayerVer3(playerData);
+        }
+    }
+
     public void Join() {
         Debug.Log("emailInputField.text: " + emailInputField.text + " passwordInputField.text: " + passwordInputField.text);
         int errorNumber = emailValidCheck(emailInputField.text);
@@ -117,7 +150,8 @@ public class FirebaseAuthManager : MonoBehaviour
             myErrorMessage(errorNumber);
             return;
         }
-        auth.CreateUserWithEmailAndPasswordAsync(emailInputField.text, passwordInputField.text).ContinueWith(task => {
+        //auth.CreateUserWithEmailAndPasswordAsync(emailInputField.text, passwordInputField.text).ContinueWith(task => {
+        auth.CreateUserWithEmailAndPasswordAsync(emailInputField.text, passwordInputField.text).ContinueWithOnMainThread(task => {
             if (task.IsCanceled) {
                 Debug.Log("회원가입 취소");
                 Debug.LogError("CreateUserWithEmailAndPasswordAsync was canceled");
@@ -133,9 +167,15 @@ public class FirebaseAuthManager : MonoBehaviour
             //Firebase New User Created
             //FirebaseUser newUser = task.Result;
             
-
-            //user = task.Result;
-            Debug.LogFormat("Firebase user created successfully: {0}", emailInputField.text);
+            if (task.IsCompleted) {
+                //user = task.Result;
+                Debug.LogFormat("Firebase user created successfully: {0}", emailInputField.text);
+                // _playerDataVer2 = new PlayerDataVer2 {
+                //     FirebaseId = user.UserId
+                // };
+                Debug.Log("test11");
+                Debug.Log("test22");
+            }
         });
     }
 
@@ -165,6 +205,7 @@ public class FirebaseAuthManager : MonoBehaviour
 
     // 여기서, Login 시 정보 가져오는거 해야합니다.
     public void LoginVer2() {
+        _userName = GetNameFromEmail(emailInputField.text);
         auth.SignInWithEmailAndPasswordAsync(emailInputField.text, passwordInputField.text).ContinueWithOnMainThread(task => {
             if (task.IsCanceled) {
                 loginFailPanel.SetActive(true);
@@ -177,18 +218,18 @@ public class FirebaseAuthManager : MonoBehaviour
                 return;
             }
             if (task.IsCompleted) {
-                Debug.Log("Login Complete");
                 AuthResult authResult = task.Result;
                 FirebaseUser user = authResult.User;
-                Debug.LogFormat("task.Result: {0}", task.Result);
-                Debug.LogFormat("[1] User signed in successfully: {0}", user.Email);
-                Debug.LogFormat("[2] User signed in successfully: {0}", user.Email);            
+
+                // _playerData = new PlayerData {
+                //     Name = user.UserId
+                // };
+                _playerDataVer2 = new PlayerDataVer2 {
+                    FirebaseId = user.UserId,
+                    Name = _userName
+                };
                 LoginPageManager.LoginInstance.IS_LOGIN = true;
                 LoginPageManager.LoginInstance.SetUserId(auth.CurrentUser.UserId);
-                _playerData.Name = auth.CurrentUser.UserId;
-                Debug.Log("[3] auth.CurrentUser.UserId: " + auth.CurrentUser.UserId);
-                
-                //GameManager.instance.UpdatePlayer(_playerData);
                 loginOkPanel.SetActive(true);
             }
         });
