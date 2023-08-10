@@ -5,6 +5,7 @@ using UnityEngine;
 using Firebase;
 using Firebase.Extensions;
 using Firebase.Database;
+using UnityEngine.Events;
 
 public class PlayerSaveManager : MonoBehaviour
 {
@@ -12,6 +13,10 @@ public class PlayerSaveManager : MonoBehaviour
     private const string PLAYER_KEY_VER2 = "PLAYER_KEY_VER2";
     private const string PLAYER_KEY_VER3 = "PLAYER_KEY_VER3";
     private FirebaseDatabase _database;
+
+    public PlayerDataVer2 LastPlayerData {get; private set;}
+
+    public UnityEvent OnPlayerUpdated = new UnityEvent();
 
     void Start()
     { 
@@ -46,10 +51,14 @@ public class PlayerSaveManager : MonoBehaviour
     }
 
     public async void SavePlayerChild(PlayerDataVer2 player) {
-        Debug.Log("SavePlayerChild Call");
-        PlayerPrefs.SetString(PLAYER_KEY_VER3, JsonUtility.ToJson(player));
-        var playerRef = _database.GetReference(PLAYER_KEY_VER3).Child(player.FirebaseId);
-        await playerRef.SetRawJsonValueAsync(JsonUtility.ToJson(player));
+        if (!player.Equals(LastPlayerData)) {
+            Debug.Log("SavePlayerChild Call");
+            PlayerPrefs.SetString(PLAYER_KEY_VER3, JsonUtility.ToJson(player));
+            var playerRef = _database.GetReference(PLAYER_KEY_VER3).Child(player.FirebaseId);
+            await playerRef.SetRawJsonValueAsync(JsonUtility.ToJson(player));
+        } else {
+            Debug.Log("SavePlayerChild Fail, Because => player.Equals(LastPlayerData)");
+        }
     }
 
     public async Task<PlayerData?> LoadPlayer() {
@@ -91,7 +100,7 @@ public class PlayerSaveManager : MonoBehaviour
         }
         return JsonUtility.FromJson<PlayerDataVer2>(dataSnapshot.GetRawJsonValue());
     }
-    
+
     public async Task<bool> SaveExists() {
         var dataSnapshot = await _database.GetReference(PLAYER_KEY).GetValueAsync();
         return dataSnapshot.Exists;

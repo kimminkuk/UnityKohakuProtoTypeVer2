@@ -101,38 +101,17 @@ public class GameManager : MonoBehaviour
 
     async void Start()
     {
-        // 1. 아이디 바꿔서 테스트 해보기
-        //    1-1. userId를 그 뭐냐, Firebase에서 제공해주는 userId의 hash 값을 받아서 넘겨주면 계속 저장가능한거 아닌가??
-        //    1-2. 역으로... 그 hash값으로 내가 판단할 수 있나???
-        //    1-3. 설정이 가능하다면 그냥 숫자로 바꾸고 싶은데.. 0, 1, 2...999999 이런식으로
-        //    1-4. 아..DontDestroyOnLoad를 사용해서, FirebaseAuthManager를 살린다?
-        //    1-5. FirebaseAuthManager에서 PlayerData new로 생성 후, 
-        //         파괴 불가 설정 하고, GameManager Start findObjectOfTpye으로 찾는다.
-        // 2. CoinUp이 UpdatePlayer 이후로 호출되는 이유 찾기
-        //    2-1. Enemy가 죽고, CoinUp 됩니다.
-        //         그러나, Enemy가 죽으면 StageClear가 호출됩니다.
-        //         이 순서가 지금 StageClear() -> CoinUp() 입니다.
-        //         내가 원하는건 CoinUp() -> StageClear() 입니다.
-        //         음.. 이건 어떻게 해야할까요?
-        //         그냥 Enemy Die할 때, GameManager의 _PlayerData.Coin++해줌
-        // 3. PlayerData의 아이디는 원래 나중에 설정해도 되는건가?
-        //    3-1. ID Ui 입력
-        // 4. Load해보기
-        //    4-1. ID, COIN, LEVEL 저장해두고있어야합니다.
-        //    4-2. FirebaseAuthManager에서 만들어둔거랑.. FirebaseRTDM에서 가져온 데이터를 비교해서
-        //         덮어써줄때 다르게 해줄까?
-        //    4-3. RTDM에서 가져오려면 처음에 아이디가 없을 때는 만들어줘야합니다..
-        //    4-4. 아하, 그럼 Login 화면에서 아이디 생성 시, RTDM에 저장해주고,
-        //         GameManager에서는 LoadPlayerVer2를 호출해서 데이터에 넣어주면 될듯요
-        // 5. RTBM에 저장하기전에 자동으로 PLAYER_KEY_VER3를 생성해서 저장하는 방법이 없을까...?
-        //    5-1. firebase의 RTBM개수를 보고, 읽어와서 저장..?
-        //    5-2. 이거까지는 일단 생각하지말자 넘 복잡하다, 그리고 설계 단계를 배우고와야할듯
-        //    5-3. 의도하지 않은 동작 하고 있습니다. (push를 child로 변경해서 해결)
-        //    
-        // 6. firebasId를 이용해서 Load 후, UI에 적용하기
+        // Bug
+        // 2. Load하고 나서, Tower들을 클릭할 수 가 없다..?
+        //    스타트/스톱 버튼을 한번 눌러서 초기화 해줘야함 왜지??
+
+        // 1. test301, test302, test303 만들어서 firebaseId 조금만 더 Debug 해보기
+        //    Sync이런걸 안해서.. 정확히 모르겠음
+        //    Sync 관련해서 내용이 조금 더 있긴하네.. 적용해볼까? ㄴㄴ Fail 나오는 코드있음 그냥 제끼자 
+        // 2. 이번엔, Melee, Range Tower 까지 PlayerDataVer2에 적용하자
+        //    2-1. Melee, Range 소환한 케릭터들 일치 시키기
+        //    2-2. 위치까지 기억해두기.
         _playerDataVer2 = FindObjectOfType<FirebaseAuthManager>().PlayerDataVer2;
-        // tempCoinValue = coin;
-        // gameStage = gameLevel;
         playerSaveManager = firebaseRTDM.GetComponent<PlayerSaveManager>();
         
         userIdText.GetComponent<UnityEngine.UI.Text>().text = _playerDataVer2.FirebaseId;
@@ -140,9 +119,9 @@ public class GameManager : MonoBehaviour
         if (LoadPlayerDataVer2 != null) {
             Debug.Log("LoadPlayerDataVer2: " + LoadPlayerDataVer2);
             Debug.Log("LoadPlayerDataVer2.Value: " + LoadPlayerDataVer2.Value);
-            
-            coinText.GetComponent<UnityEngine.UI.Text>().text = LoadPlayerDataVer2.Value.Coin.ToString();
-            gameStage = LoadPlayerDataVer2.Value.GameLevel;
+            _playerDataVer2 = LoadPlayerDataVer2.Value;
+            coinText.GetComponent<UnityEngine.UI.Text>().text = _playerDataVer2.Coin.ToString();
+            gameStage = _playerDataVer2.GameLevel;
         } else {
             Debug.Log("LoadPlayerDataVer2 is null");
         }
