@@ -12,6 +12,12 @@
   - 튜토리얼 만들기
   - Stage 10까지 하고, 중간 보스 생성 후 마무리
 
+# 계획 일정 ~8/E
+### 개요
+  - FireBase RealTime Data 구현
+  - Save, Load 구현
+  - Member: Coin, Level
+
 ### Todo
   - Player
     - 움직임
